@@ -1,4 +1,4 @@
-from ext_lib.etl_tools import BaseLoader
+from ext_lib import BaseLoader
 
 class Loader(BaseLoader):
     def __init__(self):

@@ -6,15 +6,24 @@ import logging
 log_setup()
 log = logging.getLogger(__name__)
 
-from .pipeline import Pipeline_Runner
+# Import dependencies
 from argparse import ArgumentParser, Namespace
+from dotenv import load_dotenv
 
+# Custom libraries
+from .pipeline import Pipeline_Runner, ETL_Config
+
+
+# Command Line Interface namespace class for linter type checking
 class CLIArgs(Namespace):
     pipeline: str
     config: str
 
-
 def main() -> None:
+    # Bring in environment variables first
+    load_dotenv()
+    
+
     # Create argument parsers
     parser = ArgumentParser(
         description = 'Run one of the configured ETL pipelines.'
@@ -33,8 +42,11 @@ def main() -> None:
     # Grab arguments
     args = parser.parse_args(namespace = CLIArgs())
 
+    # Create the configuration
+    cfg = ETL_Config.from_yaml(args.config)
+
     # Instantiate the runner
-    runner = Pipeline_Runner(args.config)
+    runner = Pipeline_Runner(cfg)
 
     # Kick off pipeline
     runner.run(args.pipeline)

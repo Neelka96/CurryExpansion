@@ -2,19 +2,17 @@
 from typing import overload, Literal
 from importlib import import_module
 import pandas as pd
-import yaml
 
 # Allow logging from top-level
 import logging
 log = logging.getLogger(__name__)
 
-# Custom Libraries
-from ext_lib import BaseExtractor, BaseTransformer, BaseLoader, expand_env
+# Custom libraries
+from ext_lib import BaseExtractor, BaseTransformer, BaseLoader
 from yaml_stubs import Component_Config, Pipeline_Def, ETL_Config
 
 
 class Pipeline_Runner:
-    cfg: ETL_Config
     '''
     The Pipeline Runner is an abstraction of the ETL process meant to be orchestrated from the pipeline.yml file.  
     The top-level parent file that creates an instantiation must load in environment variables first via `dotenv.load_dotenv()` to ensure they're expanded properly.
@@ -26,11 +24,8 @@ class Pipeline_Runner:
     :returns: Abstracted Pipeline containing the parsed yaml. Ready for specific pipeline execution.
     :rtype: Pipeline_Runner
     '''
-    def __init__(self, config_path: str):
-        # Open main config YAML and expand ENV vars with actual vars
-        raw_cfg = yaml.safe_load(open(config_path, 'r'))
-        expanded_cfg = expand_env(raw_cfg)
-        self.cfg = ETL_Config.model_validate(expanded_cfg)
+    def __init__(self, cfg: ETL_Config):
+        self.cfg = cfg
     
     # Type checks implementation for each component type and its corresponding base ETL part
     @overload

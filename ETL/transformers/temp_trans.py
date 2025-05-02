@@ -1,4 +1,4 @@
-from ext_lib.etl_tools import BaseTransformer
+from ext_lib import BaseTransformer
 
 class Transformer(BaseTransformer):
     def __init__(self):

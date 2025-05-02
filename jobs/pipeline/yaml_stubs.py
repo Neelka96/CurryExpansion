@@ -1,4 +1,10 @@
+# Import dependencies
 from pydantic import BaseModel, Field
+import yaml
+
+# Custom libraries
+from ext_lib import expand_env
+
 
 class Component_Config(BaseModel):
     class_name:     str                     = Field(..., alias = 'class')
@@ -16,6 +22,12 @@ class ETL_Config(BaseModel):
     loaders:        dict[str, Component_Config]
     pipelines:      dict[str, Pipeline_Def]
 
+    @classmethod
+    def from_yaml(cls, path: str) -> 'ETL_Config':
+        # Open main config YAML and expand ENV vars with actual vars
+        raw_cfg = yaml.safe_load(open(path, 'r'))
+        expanded_cfg = expand_env(raw_cfg)
+        return cls.model_validate(expanded_cfg)
 
 # EOF
 
