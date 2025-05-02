@@ -1,0 +1,43 @@
+# config/pipeline.yml
+
+# Building blocks for ETL Classes
+extractors:
+  NYC_Open:
+    class: ETL.extractors.api_extract.NYC_Open_Extractor
+    params:
+      url:
+      api_key: ${env:NYC_OPEN_KEY}
+  Census:
+    class:
+    params:
+      url:
+      api_key:
+
+transformers:
+  transformerName:
+    class:
+    params: {}
+  nextTransformer:
+    class:
+    params: {}
+
+loaders:
+  postgres:
+    class:
+    params:
+      dataset:
+      table:
+
+# Putting pipelines together
+pipelines:
+  startup:
+    extractors: [ NYC_Open, Census]
+    merge: true
+    transformers: [ transformerName, nextTransformer ]
+    loaders: [ postgres ]
+
+  biweekly_update:
+    extractors: [ NYC_Open]
+    merge: false
+    transformers: [ transformerName, nextTransformer]
+    loaders: [ postgres ]
