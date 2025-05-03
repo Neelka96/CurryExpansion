@@ -6,12 +6,21 @@ extractors:
     class: ETL.extractors.api_extract.NYC_Open_Extractor
     params:
       url:
-      api_key: ${env:NYC_OPEN_KEY}
+      api_key: ${env:nyc_open_key}
+      sleep: 10
+      timeout: 15
+      delay: 10
+      retry: 2
+      years_cutoff: 2
+      row_limit: 200000
   Census:
     class:
     params:
       url:
       api_key:
+      sleep:
+      timeout:
+
 
 transformers:
   transformerName:
