@@ -1,18 +1,25 @@
-import logging
+# Import dependencies
+from functools import wraps
 import logging.config
+import logging
 
-# Custom Configuration class for app
-from config import Config
+# Custom libraries
+from config import Settings
 
-def log_setup() -> None:
-    # Bring in singleton instance class
-    config = Config()
+def log_exceptions(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            # Grab the logger for the module that defined fn
+            fn_logger = logging.getLogger(fn.__module__)
+            fn_logger.exception('Error in %s', fn.__qualname__)
+            raise
+    return wrapper
 
-    # Set up variables
-    env = config.ENV
-    azure_conn = config.AZURE_CONN
-    log_level = config.LOG_LEVEL
-    log_file = config.LOG_FILE
+def log_setup(cfg: Settings) -> None:
+    # Add more handlers here if necessary
     root_handlers: list[str] = ['console', 'file']
 
     # Explicit logging dictionary
@@ -29,26 +36,26 @@ def log_setup() -> None:
             'console': {
                 'class': 'logging.StreamHandler',
                 'formatter': 'default',
-                'level': log_level,
+                'level': cfg.log_level,
             },
             'file': {
                 'class': 'logging.FileHandler',
                 'formatter': 'default',
-                'level': log_level,
-                'filename': log_file,
+                'level': cfg.log_level,
+                'filename': cfg.log_file,
             },
         },
         'root': {
             'handlers': root_handlers,
-            'level': log_level,
+            'level': cfg.log_level,
         },
     }
-    # Dynamic element to detect if an azure handler is needed
-    if env == 'production' and azure_conn:
+    # Detect if azure logger is needed, and if so build and add it to the root handlers
+    if cfg.app_env == 'production':
         logging_config['handlers']['azure'] = {
             'class': 'opencensus.ext.azure.log_exporter.AzureLogHandler',
-            'level': log_level,
-            'connection_string': azure_conn,
+            'level': cfg.log_level,
+            'connection_string': cfg.caas_conn,
         }
         root_handlers.append('azure')
 

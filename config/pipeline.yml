@@ -17,10 +17,9 @@ extractors:
     class:
     params:
       url:
-      api_key:
+      api_key: ${env:census_key}
       sleep:
       timeout:
-
 
 transformers:
   transformerName:
@@ -40,13 +39,20 @@ loaders:
 # Putting pipelines together
 pipelines:
   startup:
-    extractors: [ NYC_Open, Census]
-    merge: true
+    extractors: [ NYC_Open, Census ]
+    concat: true
     transformers: [ transformerName, nextTransformer ]
     loaders: [ postgres ]
 
   biweekly_update:
     extractors: [ NYC_Open]
-    merge: false
-    transformers: [ transformerName, nextTransformer]
+    concat: false
+    transformers: [ transformerName, nextTransformer ]
     loaders: [ postgres ]
+
+# Grouping pipelines together
+tasks:
+  name1:
+    pipelines: [ startup, biweekly_update ]
+  name2:
+    pipelines: [ startup ]

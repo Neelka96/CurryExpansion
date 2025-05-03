@@ -2,8 +2,7 @@
 from .etl_tools import BaseExtractor, BaseTransformer, BaseLoader, create_dict, create_ref_table
 from .db import *
 from .env_tools import expand_env
-# from .decorators import
-from .logger import log_setup
+from .logger import log_setup, log_exceptions
 
 
 # EOF

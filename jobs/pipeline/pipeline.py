@@ -8,8 +8,9 @@ import logging
 log = logging.getLogger(__name__)
 
 # Custom libraries
-from ext_lib import BaseExtractor, BaseTransformer, BaseLoader
-from yaml_stubs import Component_Config, Pipeline_Def, ETL_Config
+from config import Settings, Component_Config, Pipeline_Def, Tasks, ETL_Config
+from ext_lib import BaseExtractor, BaseTransformer, BaseLoader, log_exceptions
+
 
 
 class Pipeline_Runner:
@@ -24,19 +25,20 @@ class Pipeline_Runner:
     :returns: Abstracted Pipeline containing the parsed yaml. Ready for specific pipeline execution.
     :rtype: Pipeline_Runner
     '''
-    def __init__(self, cfg: ETL_Config):
-        self.cfg = cfg
+    def __init__(self, settings: Settings, etl_cfg: ETL_Config):
+        self.settings = settings
+        self.etl_cfg = etl_cfg
     
     # Type checks implementation for each component type and its corresponding base ETL part
     @overload
-    def __make(self, component_type: Literal['extractors'],     name: str) -> BaseExtractor: ...
+    def _make(self, component_type: Literal['extractors'],     name: str) -> BaseExtractor: ...
     @overload
-    def __make(self, component_type: Literal['transformers'],   name: str) -> BaseTransformer: ...
+    def _make(self, component_type: Literal['transformers'],   name: str) -> BaseTransformer: ...
     @overload
-    def __make(self, component_type: Literal['loaders'],        name: str) -> BaseLoader: ...
+    def _make(self, component_type: Literal['loaders'],        name: str) -> BaseLoader: ...
 
     # Actual function definition with all variations
-    def __make(self, component_type: Literal['extractors', 'transformers', 'loaders'], name: str) -> BaseExtractor | BaseTransformer | BaseLoader:
+    def _make(self, component_type: Literal['extractors', 'transformers', 'loaders'], name: str) -> BaseExtractor | BaseTransformer | BaseLoader:
         '''Constructs an instance of a designated class with loaded parameters from the pipeline.yml.
 
         :param component_type: Specific section of pipeline building blocks.
@@ -48,49 +50,63 @@ class Pipeline_Runner:
         :rtype: BaseExtractor or BaseTransformer or BaseLoader
         '''
         # Gets the actual class specified by the YAML for pipeline and construct with paramaters
-        comp_cfg: Component_Config = getattr(self.cfg, component_type)[name]
+        comp_cfg: Component_Config = getattr(self.etl_cfg, component_type)[name]
         module_name, cls_name = comp_cfg.class_name.rsplit('.', 1)
         Impl = getattr(import_module(module_name), cls_name)
         log.debug('Crafting import %s.%s.', (module_name, cls_name))
         return Impl(**(comp_cfg.params or {}))
 
     # Execution for pipeline begins and ends here
-    def run(self, pipeline_name: str):
-        '''Actual runtime with parsed class creation and pipeline execution.
+    def _run_single_pipeline(self, pipeline: str) -> None:
+        '''
+        Actual running of any pipeline (requires the linking of abstract ETL classes from ext_lib). 
+        Not meant for external use `.run(task_or_pipe)` instead as it accepts a task or pipeline name.
 
-        :param pipeline_name: Pipeline name from pipeline.yml to run.
-        :type pipeline_name: str
+        :param pipeline: Name of pipeline to run
+        :type pipeline: str
 
-        :returns: No return for success. See logging file for details.
+        :returns: No return on success. See logging file for details.
         :rtype: None
         '''
         # Log pipeline start
-        log.info('Pipeline %s started.', pipeline_name)
+        log.info('Pipeline %s started.', pipeline)
 
         # Get selected pipeline from YAML
-        pipe: Pipeline_Def = self.cfg.pipelines[pipeline_name]
+        pipe: Pipeline_Def = self.etl_cfg.pipelines[pipeline]
 
         # Extract all sources
-        dfs = [self.__make('extractors', key).extract() for key in pipe.extractors]
+        dfs = [self._make('extractors', key).extract() for key in pipe.extractors]
 
-        # Checks for merging requirement
-        if pipe.merge: dfs = [pd.concat(dfs, ignore_index = True)]
+        # Checks for concat requirement
+        if pipe.concat: dfs = [pd.concat(dfs, ignore_index = True)]
 
         # Transform all extractions
         for df in dfs:
             for key in pipe.transformers:
-                df = self.__make('transformers', key).transform(df)
+                df = self._make('transformers', key).transform(df)
 
         # Load cleaned data
         for df in dfs:
             for key in pipe.loaders:
-                self.__make('loaders', key).load(df)
+                self._make('loaders', key).load(df)
         
         # Log task finish
-        log.info('Pipeline %s completed.', pipeline_name)
+        log.info('Pipeline %s completed.', pipeline)
 
         return None
 
+    # Method to be called to kickstart process, checks if task or pipeline for single or multiple runs.
+    def run(self, name: str) -> None:
+        if name in self.etl_cfg.tasks:
+            pipelines = self.etl_cfg.tasks[name].pipelines
+            log.info('Task %s selected successfully.', name)
+        elif name in self.etl_cfg.pipelines:
+            pipelines = [name]
+        else:
+            raise ValueError(f'{name} task or pipeline name could not be found. Exiting without changes.')
+        
+        for pipe in pipelines:
+            self._run_single_pipeline(pipe)
 
 # EOF
 

@@ -12,15 +12,20 @@ class Component_Config(BaseModel):
 
 class Pipeline_Def(BaseModel):
     extractors:     list[str]
-    merge:          bool                    = Field(default = False, description = 'Merge boolean for extracted sources, found in pipeline.yml')
+    concat:         bool                    = Field(default = False, description = 'Concatenation boolean for extracted sources, found in pipeline.yml')
     transformers:   list[str]
     loaders:        list[str]
+
+class Tasks(BaseModel):
+    pipelines:      list[str]
 
 class ETL_Config(BaseModel):
     extractors:     dict[str, Component_Config]
     transformers:   dict[str, Component_Config]
     loaders:        dict[str, Component_Config]
     pipelines:      dict[str, Pipeline_Def]
+    tasks:          dict[str, Tasks]
+
 
     @classmethod
     def from_yaml(cls, path: str) -> 'ETL_Config':

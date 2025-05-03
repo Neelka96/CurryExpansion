@@ -68,13 +68,15 @@ class Database:
             ) -> Sequence[Row] | None:
         '''Wrapper for custom context manager for simple and bulk queries.
 
-        Args:
-            stmt (Executable): `Select`, `Insert`, `Delete`, and other Core `SQL` clause types.
-            params (dict | Sequence[dict] | None, optional): Data or constraints to be used. Defaults to None.
+        :param stmt: A core SQL clause `Select`, `Insert`, `Delete`, ...
+        :type stmt: Executable
+        :param params: Data or constraints to be used. Defaults to None.
+        :type params: dict | Sequence[dict] | None
 
-        Returns:
-            Sequence[Row]: Returns view of data from `Select` type.
-            int: Non-select executable type returns 0.
+        :returns: Returns view of data from `Select` type.
+        :rtype: Sequence[Row]
+        :returns: Non-select executable type returns 0.
+        :rtype: int
         '''
         with self.get_session() as session:
             log.debug('execute_query() called.')
@@ -93,12 +95,13 @@ class Database:
             ) -> None:
         '''Creates new table, expects it to be empty.
 
-        Args:
-            tableClass (DeclarativeMeta): Staged table.
-            df (pd.DataFrame): Data to write to table.
+        :param tableClass: Staged table.
+        :type tableClass: DeclarativeMeta
+        :param df: Data to write to table.
+        :type df: pd.DataFrame
 
-        Returns:
-            int: Rows changed.
+        :returns: Rows changed.
+        :rtype: int
         '''
         log.debug('Building fresh table.')
         try:    # Insert the table from scratch via chunks in case of large size

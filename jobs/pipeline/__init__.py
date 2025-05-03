@@ -1,5 +1,4 @@
 from .pipeline import Pipeline_Runner
-from .yaml_stubs import ETL_Config
 
 # EOF
 

@@ -1,55 +1,55 @@
 # jobs/main.py
 # File to be executed fo ETL processing. Parent, top-level executor
-# Log initializer should be started here for trickle downs
-from ext_lib import log_setup
-import logging
-log_setup()
-log = logging.getLogger(__name__)
 
 # Import dependencies
 from argparse import ArgumentParser, Namespace
 from dotenv import load_dotenv
+import logging
 
 # Custom libraries
-from .pipeline import Pipeline_Runner, ETL_Config
+from config import Settings, ETL_Config
+from ext_lib import log_setup
+from .pipeline import Pipeline_Runner
 
 
-# Command Line Interface namespace class for linter type checking
+# CLI class for namespace linking and linter assistance
 class CLIArgs(Namespace):
-    pipeline: str
+    name: str
     config: str
 
 def main() -> None:
-    # Bring in environment variables first
-    load_dotenv()
-    
+    load_dotenv()           # Bring in environment variables first
+    settings = Settings()   # Very first object to be constructed
+    log_setup(settings)     # Master log setup with Settings obj for lower-level files
+    log = logging.getLogger(__name__)
 
     # Create argument parsers
-    parser = ArgumentParser(
-        description = 'Run one of the configured ETL pipelines.'
+    parser = ArgumentParser(description = 'Run one of the configured ETL pipelines.')
+    parser.add_argument(
+        'name',
+        help = 'The name of the task (pipeline grouping) or single pipeline to run.'
     )
     parser.add_argument(
-        'pipeline'
-        ,help = 'The name of the pipeline to run.'
-    )
-    parser.add_argument(
-        '--config'
-        ,default = 'config/pipeline.yml'
-        ,help = 'Path to the YAML Pipeline (default: %(default)s)'
-        ,dest = 'config'
+        '--config',
+        default = 'config/pipeline.yml',
+        help = 'Path to the YAML Pipeline (default: %(default)s)',
+        dest = 'config'
     )
 
     # Grab arguments
     args = parser.parse_args(namespace = CLIArgs())
 
     # Create the configuration
-    cfg = ETL_Config.from_yaml(args.config)
+    etl_cfg = ETL_Config.from_yaml(args.config)
 
     # Instantiate the runner
-    runner = Pipeline_Runner(cfg)
+    runner = Pipeline_Runner(
+        settings = settings,
+        etl_cfg = etl_cfg
+    )
 
     # Kick off pipeline
-    runner.run(args.pipeline)
+    runner.run(args.name)
 
     return None
 
