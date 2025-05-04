@@ -8,9 +8,8 @@ import logging
 log = logging.getLogger(__name__)
 
 # Custom libraries
-from config import Settings, Component_Config, Pipeline_Def, Tasks, ETL_Config
-from ext_lib import BaseExtractor, BaseTransformer, BaseLoader, log_exceptions
-
+from ext_lib import log_exceptions
+from .bin import BaseExtractor, BaseTransformer, BaseLoader, Component_Block, Pipeline_Block, Task_Block, ETL_Config
 
 
 class Pipeline_Runner:
@@ -25,9 +24,8 @@ class Pipeline_Runner:
     :returns: Abstracted Pipeline containing the parsed yaml. Ready for specific pipeline execution.
     :rtype: Pipeline_Runner
     '''
-    def __init__(self, settings: Settings, etl_cfg: ETL_Config):
-        self.settings = settings
-        self.etl_cfg = etl_cfg
+    def __init__(self, etl_cfg_path: str):
+        self.etl_cfg = ETL_Config.from_yaml(etl_cfg_path)
     
     # Type checks implementation for each component type and its corresponding base ETL part
     @overload
@@ -50,7 +48,7 @@ class Pipeline_Runner:
         :rtype: BaseExtractor or BaseTransformer or BaseLoader
         '''
         # Gets the actual class specified by the YAML for pipeline and construct with paramaters
-        comp_cfg: Component_Config = getattr(self.etl_cfg, component_type)[name]
+        comp_cfg: Component_Block = getattr(self.etl_cfg, component_type)[name]
         module_name, cls_name = comp_cfg.class_name.rsplit('.', 1)
         Impl = getattr(import_module(module_name), cls_name)
         log.debug('Crafting import %s.%s.', (module_name, cls_name))
@@ -72,7 +70,7 @@ class Pipeline_Runner:
         log.info('Pipeline %s started.', pipeline)
 
         # Get selected pipeline from YAML
-        pipe: Pipeline_Def = self.etl_cfg.pipelines[pipeline]
+        pipe: Pipeline_Block = self.etl_cfg.pipelines[pipeline]
 
         # Extract all sources
         dfs = [self._make('extractors', key).extract() for key in pipe.extractors]
@@ -96,6 +94,7 @@ class Pipeline_Runner:
         return None
 
     # Method to be called to kickstart process, checks if task or pipeline for single or multiple runs.
+    @log_exceptions
     def run(self, name: str) -> None:
         if name in self.etl_cfg.tasks:
             pipelines = self.etl_cfg.tasks[name].pipelines

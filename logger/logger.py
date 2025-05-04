@@ -1,24 +1,15 @@
 # Import dependencies
-from functools import wraps
 import logging.config
 import logging
 
 # Custom libraries
-from config import Settings
+from factory import get_settings
 
-def log_exceptions(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except Exception as e:
-            # Grab the logger for the module that defined fn
-            fn_logger = logging.getLogger(fn.__module__)
-            fn_logger.exception('Error in %s', fn.__qualname__)
-            raise
-    return wrapper
 
-def log_setup(cfg: Settings) -> None:
+def log_setup() -> None:
+    # Get the settings (first time or from the factory cache)
+    cfg = get_settings()
+
     # Add more handlers here if necessary
     root_handlers: list[str] = ['console', 'file']
 

@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 import logging
 
 # Custom libraries
-from config import Settings, ETL_Config
-from ext_lib import log_setup
-from .pipeline import Pipeline_Runner
+from logger import log_setup
+from factory import get_settings
+from ETL import Pipeline_Runner
 
 
 # CLI class for namespace linking and linter assistance
@@ -18,9 +18,9 @@ class CLIArgs(Namespace):
     config: str
 
 def main() -> None:
-    load_dotenv()           # Bring in environment variables first
-    settings = Settings()   # Very first object to be constructed
-    log_setup(settings)     # Master log setup with Settings obj for lower-level files
+    load_dotenv()   # Bring in environment variables first
+    get_settings()  # Initialize settings for the 1st time - saved in lru_cache
+    log_setup()     # Master log setup with Settings obj for lower-level files
     log = logging.getLogger(__name__)
 
     # Create argument parsers
@@ -38,15 +38,9 @@ def main() -> None:
 
     # Grab arguments
     args = parser.parse_args(namespace = CLIArgs())
-
-    # Create the configuration
-    etl_cfg = ETL_Config.from_yaml(args.config)
-
+    
     # Instantiate the runner
-    runner = Pipeline_Runner(
-        settings = settings,
-        etl_cfg = etl_cfg
-    )
+    runner = Pipeline_Runner(etl_cfg_path = args.config)
 
     # Kick off pipeline
     runner.run(args.name)

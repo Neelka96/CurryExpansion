@@ -20,14 +20,16 @@ class Settings(BaseSettings):
     # Basic App/Env Configurations
     app_env:        Envs                = 'development'
     debug:          bool                = True
+    root:           Path                = Path(__file__).resolve().parents[1]
+    templates_stem: Path                = Path('api/templates')
 
     # Log Configurations
     log_level:      LogLevels           = 'INFO'
     log_name:       str                 = 'app'
 
     # Drives available to store persistent data and the drive chosen by user or default for environment
-    mnt_drive:      Path                = Path('/mnt/shared')
-    loc_drive:      Path                = Path(__file__).resolve().parent / 'resources'
+    mnt_drive:      Path                = '/mnt/shared'
+    loc_drive_stem: Path                = Path('resources')
 
     # CaaS secrets
     caas_conn:      SecretStr | None    = None  # Default of None -> (Prod) **REQUIRED | (Dev) None
@@ -59,11 +61,11 @@ class Settings(BaseSettings):
     @field_validator('*', mode = 'before')
     def _strip_all_strings(cls, v: Any) -> Any:
         return v.strip() if isinstance(v, str) else v
-    
+
 
     # 2) -- Post parsing model validation --
     @model_validator(mode = 'after')
-    def _extra_post_validation(self) -> 'Settings':
+    def _conn_str_validation(self) -> 'Settings':
         # Checks for presence of cloud service connection strings and raises if error if any are missing
         if self.app_env == 'production' and (self.caas_conn is None or self.caas_mnt_conn is None):
             raise TypeError('CaaS connection strings required in production settings.')
@@ -71,24 +73,40 @@ class Settings(BaseSettings):
 
 
     # 3) -- Post parsing property fields dumped into Pydantic --
+    # BP code - directory helper function
+    # Fixes the path and creates directory if it doesn't exist
+    def _mkdir_get_path(self, stem: Path) -> Path:
+        p = self.root / stem
+        p.mkdir(parent = True, exist_ok = True)
+        return p
+
+    @computed_field
+    @property
+    def templates(self) -> Path:
+        return self._mkdir_get_path(self.templates_stem)
+
+    @computed_field
+    @property
+    def loc_drive(self) -> Path:
+        return self._mkdir_get_path(self.loc_drive_stem)
+
     # storage property comes from the active environment and whether or not the drive exists; if production mount doesn't exist switch to development mount
     @computed_field
     @property
     def storage(self) -> Path:
         if self.app_env == 'production' and self.mnt_drive.exists() and self.mnt_drive.is_dir():
-            return self.mnt_drive
+            p = self.mnt_drive
         else:
-            if not self.loc_drive.exists():
-                self.loc_drive.mkdir(parents = True, exist_ok = True)
-            return self.loc_drive
+            p = self.loc_drive
+        return p
 
     # log_file property comes from other dynamic property configured during runtime
     @computed_field
     @property
     def log_file(self) -> Path:
-        log_path = self.storage / self.log_name
-        log_path = log_path.with_suffix(log_path.suffix + '.log')
-        return log_path
+        p = self.storage / self.log_name
+        p = p.with_suffix(p.suffix + '.log')
+        return p
 
     # engine_uri property comes from other static environment variable configurations available
     @computed_field

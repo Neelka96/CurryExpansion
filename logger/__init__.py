@@ -1,6 +1,4 @@
-# Subpackages
-from .config import Settings
-
+from .logger import log_setup
 
 # EOF
 

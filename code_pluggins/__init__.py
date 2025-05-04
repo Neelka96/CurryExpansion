@@ -1,6 +1,3 @@
-# Subpackages
-from .config import Settings
-
 
 # EOF
 

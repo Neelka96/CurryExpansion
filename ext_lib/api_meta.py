@@ -1,10 +1,6 @@
 # Import dependencies
 from flask import request
 
-# Bring in custom logger
-from Core.log_config import init_log
-log = init_log(__name__)
-
 # Automatic Metadata Creation
 def forge_metadata(
         route: str
@@ -23,7 +19,6 @@ def forge_metadata(
     Returns:
         dict: Inner metadata nest.
     '''
-    log.debug('Inner wrapper for forge_json called.')
     return {
         'current_route': route
         ,'home_route': request.host
@@ -51,7 +46,6 @@ def forge_json(
     Returns:
         dict: Full python style JSON ready for Flask export.
     '''
-    log.debug('Creating custom JSON Metadata.')
     json_api = {
         'metadata': forge_metadata(route, len(nest), desc, params)
         ,'results': nest

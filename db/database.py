@@ -2,42 +2,30 @@
 from math import ceil
 from contextlib import contextmanager
 from collections.abc import Sequence, Generator
-from sqlalchemy import event, Engine, Select, Row, create_engine, insert
-from sqlalchemy.orm import DeclarativeMeta, sessionmaker, Session as Session_Class
+from sqlalchemy import Select, Row, insert
 from sqlalchemy.sql import Executable
+from sqlalchemy.orm import DeclarativeMeta, Session as Session_Class
 import pandas as pd
 
-# Import configuration
-from config.config import Config
-config = Config()
+# Custom libraries
+from factory import get_session_factory
+from ext_lib import auto_log_cls
 
 # Create logger
 import logging
 log = logging.getLogger(__name__)
 
-# Import protocols
-from .protocols import DBAPI_Connection
-
-
-# Single engine instance for class blueprint
-engine = create_engine(config.ENGINE_URI)
-
-# Event listener for engine connection, enforces foreign keys upon connection
-@event.listens_for(Engine, 'connect')
-def enforce_sqlite_fks(dbapi: DBAPI_Connection, conn_record) -> None:
-    cursor = dbapi.cursor()
-    cursor.execute('PRAGMA foreign_keys=ON;')
-    cursor.close()
-    return None
-
-# Bind session to engine now that modifications to engine are done
-SessionLocal = sessionmaker(bind = engine, expire_on_commit = False)
-
 
 # Composition based class definition
+@auto_log_cls
 class Database:
+    '''In housed session management and basic db solutions.
+    Session and engine management created from factories to prevent duplicates.
+
+    get_session() is the primary usage for object, however other methods are wrapped via get_session() too.
+    '''
     def __init__(self):
-        self.__session = SessionLocal
+        self.SessionLocal = get_session_factory()
 
     # Context management handler for sessions for centralized handling
     @contextmanager
@@ -47,15 +35,14 @@ class Database:
         Yields:
             Generator[SessionType]: New session from bound engine connection pool.
         '''
-        session = self.__session()
+        session = self.SessionLocal()
         try:
             yield session
             session.commit()
             log.debug('Session successfully committed.')
         except Exception:
             session.rollback()
-            log.critical('Session rollback from error.')
-            raise 
+            raise
         finally:
             session.close()
             log.debug('Closing session.')
@@ -79,14 +66,10 @@ class Database:
         :rtype: int
         '''
         with self.get_session() as session:
-            log.debug('execute_query() called.')
-            try:
-                result = session.execute(stmt, params) if params else session.execute(stmt)
-                log.debug('execute_query() successful run.')
-                return result.scalars().all() if isinstance(stmt, Select) else None
-            except Exception:
-                log.exception('Could not run execute_query().')
-                raise
+            log.debug('execute_query called.')
+            result = session.execute(stmt, params) if params else session.execute(stmt)
+            log.debug('execute_query finished.')
+            return result.scalars().all() if isinstance(stmt, Select) else None
 
     def fresh_table(
             self
@@ -104,22 +87,19 @@ class Database:
         :rtype: int
         '''
         log.debug('Building fresh table.')
-        try:    # Insert the table from scratch via chunks in case of large size
-            chunk_size = int(1e4)
-            total_rows = df.shape[0]
-            num_chunks = ceil(total_rows / chunk_size)
-            rows_added = 0
+        # Insert the table from scratch via chunks in case of large size
+        chunk_size = int(1e4)
+        total_rows = df.shape[0]
+        num_chunks = ceil(total_rows / chunk_size)
+        rows_added = 0
 
-            stmt = insert(tableClass)
-            for i in range(num_chunks):
-                chunk = df.iloc[i * chunk_size : (i+1) * chunk_size]
-                rows_added += chunk.shape[0]
-                self.execute_query(stmt, chunk.to_dict('records')) # Combining of insert() from core w/ session.execute() utilizes ORM layer
-            log.debug('Table built successfully. %s rows.', rows_added)
-            return None
-        except Exception:
-            log.exception('Could not build fresh table.')
-            raise
+        stmt = insert(tableClass)
+        for i in range(num_chunks):
+            chunk = df.iloc[i * chunk_size : (i+1) * chunk_size]
+            rows_added += chunk.shape[0]
+            self.execute_query(stmt, chunk.to_dict('records')) # Combining of insert() from core w/ session.execute() utilizes ORM layer
+        log.debug('Table built successfully. %s rows.', rows_added)
+        return None
 
 # EOF
 

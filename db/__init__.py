@@ -1,5 +1,5 @@
-# Subpackages
-from .config import Settings
+from .database import Database
+from .schema import Boroughs, Cuisines, Restaurants
 
 
 # EOF

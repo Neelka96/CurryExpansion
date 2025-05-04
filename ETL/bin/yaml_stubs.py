@@ -6,25 +6,25 @@ import yaml
 from ext_lib import expand_env
 
 
-class Component_Config(BaseModel):
+class Component_Block(BaseModel):
     class_name:     str                     = Field(..., alias = 'class')
     params:         dict[str, str | None]   = Field(default_factory = dict)
 
-class Pipeline_Def(BaseModel):
+class Pipeline_Block(BaseModel):
     extractors:     list[str]
     concat:         bool                    = Field(default = False, description = 'Concatenation boolean for extracted sources, found in pipeline.yml')
     transformers:   list[str]
     loaders:        list[str]
 
-class Tasks(BaseModel):
+class Task_Block(BaseModel):
     pipelines:      list[str]
 
 class ETL_Config(BaseModel):
-    extractors:     dict[str, Component_Config]
-    transformers:   dict[str, Component_Config]
-    loaders:        dict[str, Component_Config]
-    pipelines:      dict[str, Pipeline_Def]
-    tasks:          dict[str, Tasks]
+    extractors:     dict[str, Component_Block]
+    transformers:   dict[str, Component_Block]
+    loaders:        dict[str, Component_Block]
+    pipelines:      dict[str, Pipeline_Block]
+    tasks:          dict[str, Task_Block]
 
 
     @classmethod

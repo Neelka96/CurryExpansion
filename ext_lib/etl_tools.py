@@ -1,33 +1,6 @@
 # Import dependencies
 from collections.abc import Callable
-from abc import ABC, abstractmethod
 import pandas as pd
-
-# Start logging
-import logging
-log = logging.getLogger(__name__)
-
-# Bring in log exception handler
-from ext_lib import log_exceptions
-# An important note:
-#   - log_exceptions should only be used as a wrapper to handle exceptions that bubble up
-#   - all other helper methods should be denoted with the single underscore '_' and be called by the predefined methods
-
-
-class BaseExtractor(ABC):
-    @log_exceptions
-    @abstractmethod
-    def extract(self) -> pd.DataFrame: ...
-
-class BaseTransformer(ABC):
-    @log_exceptions
-    @abstractmethod
-    def transform(self) -> pd.DataFrame: ...
-
-class BaseLoader(ABC):
-    @log_exceptions
-    @abstractmethod
-    def load(self) -> None: ...
 
 
 def create_dict(
@@ -44,7 +17,6 @@ def create_dict(
     :returns: Mapped dictionary with reference ids.
     :rtype: dict[str, str]
     '''
-    log.debug('Creating dictionary for reference table.')
     # Dictionary comprehension used to apply function to each item as it's placed in dictionary
     return {item : translation(num) for num, item in enumerate(ref_list, start = 1)}
 
@@ -63,7 +35,6 @@ def create_ref_table(
     :returns: Two column table with unique IDs.
     :rtype: pd.DataFrame
     '''
-    log.debug('Creating reference table.')
     # Adds 'id' to target column's name to create reference ID column
     new_col = f'{target_col}_id'
 
