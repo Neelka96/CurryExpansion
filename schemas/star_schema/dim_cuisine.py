@@ -19,7 +19,7 @@ class DimCuisine(Base):
     # restaurants: Mapped[list['Restaurants']] = relationship(back_populates = 'cuisine')
 
     def __repr__(self):
-        return f'<CuisineTable(id={self.cuisine_id}, cuisine={self.cuisine})>'
+        return f'<DimCuisine(id={self.cuisine_id}, cuisine={self.cuisine_name})>'
 
 # EOF
 

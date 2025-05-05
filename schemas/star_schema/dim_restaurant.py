@@ -13,18 +13,17 @@ class DimRestaurant(Base):
 
     # Columns
     restaurant_id:  Mapped[int] = mapped_column(primary_key = True)
-    name:           Mapped[str] = mapped_column(nullable = False)
+    name:           Mapped[str] = mapped_column(String(75), nullable = False)
     cuisine_id:     Mapped[int] = mapped_column(ForeignKey('dim_cuisine.cuisine_id'), nullable = False)
     location_id:    Mapped[int] = mapped_column(ForeignKey('dim_location.location_id'), nullable = False)
-    address:        Mapped[str] = mapped_column(String(200), nullable = False)
+    address:        Mapped[str] = mapped_column(String(100), nullable = False)
 
     # Relationships with reference tables, accessable through gateway now
     # borough: Mapped['Boroughs'] = relationship(back_populates = 'restaurants')
     # cuisine: Mapped['Cuisines'] = relationship(back_populates = 'restaurants')
 
-    # What is shown when print or string is called on object
     def __repr__(self):
-        return f'<RestaurantTable(id={self.restaurant_id}, name="{self.name}")>'
+        return f'<DimRestaurant(id={self.restaurant_id}, name="{self.name}")>'
 
 
 
