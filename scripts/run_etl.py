@@ -7,8 +7,7 @@ from dotenv import load_dotenv
 import logging
 
 # Custom libraries
-from logger import log_setup
-from factory import get_settings
+from core import log_setup, get_settings
 from ETL import Pipeline_Runner
 
 
@@ -18,9 +17,9 @@ class CLIArgs(Namespace):
     config: str
 
 def main() -> None:
-    load_dotenv()   # Bring in environment variables first
-    get_settings()  # Initialize settings for the 1st time - saved in lru_cache
-    log_setup()     # Master log setup with Settings obj for lower-level files
+    load_dotenv()               # Bring in environment variables first
+    env_cfg = get_settings()    # Initialize settings for the 1st time - saved in lru_cache
+    log_setup(env_cfg)          # Master log setup with Settings obj for lower-level files
     log = logging.getLogger(__name__)
 
     # Create argument parsers
@@ -31,19 +30,23 @@ def main() -> None:
     )
     parser.add_argument(
         '--config',
-        default = 'config/pipeline.yml',
+        default = 'ETL/pipeline.yml',
         help = 'Path to the YAML Pipeline (default: %(default)s)',
         dest = 'config'
     )
 
     # Grab arguments
     args = parser.parse_args(namespace = CLIArgs())
+
+    # Arguments are:
+    etl_cfg_path = args.config
+    task_or_pipe_name = args.name
     
     # Instantiate the runner
-    runner = Pipeline_Runner(etl_cfg_path = args.config)
+    runner = Pipeline_Runner(etl_cfg_path = etl_cfg_path)
 
     # Kick off pipeline
-    runner.run(args.name)
+    runner.run(task_or_pipe_name)
 
     return None
 

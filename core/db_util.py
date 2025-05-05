@@ -4,12 +4,11 @@ from contextlib import contextmanager
 from collections.abc import Sequence, Generator
 from sqlalchemy import Select, Row, insert
 from sqlalchemy.sql import Executable
-from sqlalchemy.orm import DeclarativeMeta, Session as Session_Class
+from sqlalchemy.orm import DeclarativeMeta, sessionmaker, Session
 import pandas as pd
 
 # Custom libraries
-from factory import get_session_factory
-from ext_lib import auto_log_cls
+from .core_bin import auto_log_cls
 
 # Create logger
 import logging
@@ -24,28 +23,26 @@ class Database:
 
     get_session() is the primary usage for object, however other methods are wrapped via get_session() too.
     '''
-    def __init__(self):
-        self.SessionLocal = get_session_factory()
+    def __init__(self, session_factory: sessionmaker[Session]):
+        self.session_factory = session_factory
 
     # Context management handler for sessions for centralized handling
     @contextmanager
-    def get_session(self) -> Generator[Session_Class]:
+    def get_session(self) -> Generator[Session]:
         '''Custom session context manager for SQL Alchemy.
 
         Yields:
             Generator[SessionType]: New session from bound engine connection pool.
         '''
-        session = self.SessionLocal()
+        session = self.session_factory()
         try:
             yield session
             session.commit()
-            log.debug('Session successfully committed.')
         except Exception:
             session.rollback()
             raise
         finally:
             session.close()
-            log.debug('Closing session.')
 
     # Utility for executing session requests
     def execute_query(
@@ -66,9 +63,7 @@ class Database:
         :rtype: int
         '''
         with self.get_session() as session:
-            log.debug('execute_query called.')
             result = session.execute(stmt, params) if params else session.execute(stmt)
-            log.debug('execute_query finished.')
             return result.scalars().all() if isinstance(stmt, Select) else None
 
     def fresh_table(
@@ -86,7 +81,6 @@ class Database:
         :returns: Rows changed.
         :rtype: int
         '''
-        log.debug('Building fresh table.')
         # Insert the table from scratch via chunks in case of large size
         chunk_size = int(1e4)
         total_rows = df.shape[0]

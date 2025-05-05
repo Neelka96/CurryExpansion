@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Abstract class to de-couple extraction classes from Pipeline
-from ext_lib import BaseExtractor
+from etl_bin import BaseExtractor
 
 class NYC_Open_Extractor(BaseExtractor):
     def __init__(self):

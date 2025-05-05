@@ -5,8 +5,8 @@ from pydantic import SecretStr, model_validator, field_validator, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Type aliases to make improve readability of Settings fields
-Envs: TypeAlias = Literal['development', 'production']
-LogLevels: TypeAlias    = Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'NOTSET']
+Envs:       TypeAlias   = Literal['development', 'production']
+LogLevels:  TypeAlias   = Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'NOTSET']
 
 # Quick FYI for reading of configuration
 # Pydantic's BaseSettings validators works in the flow of: 

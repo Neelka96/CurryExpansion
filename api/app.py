@@ -6,16 +6,13 @@ from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 import datetime as dt
 
-# Import subpackage dependencies
-# from Core.database import Restaurants, Boroughs, Cuisines, get_session, execute_query
-from db import Database, Restaurants, Boroughs, Cuisines
-from factory import get_settings
-from ext_lib import forge_json
+# and subpackages
+from core import Database, get_settings, get_session_factory, forge_json
+from schemas import Boroughs, Cuisines, Restaurants
 
 # Create Database object for easy connection
-dbapi = Database()
 cfg = get_settings()
-
+dbapi = Database(get_session_factory())
 
 
 #################################################

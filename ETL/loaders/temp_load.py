@@ -1,7 +1,10 @@
-from ext_lib import BaseLoader
+from etl_bin import BaseLoader
 
 class Loader(BaseLoader):
     def __init__(self):
+        ...
+
+    def load(self):
         ...
 
 # EOF

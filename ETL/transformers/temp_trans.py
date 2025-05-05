@@ -1,7 +1,10 @@
-from ext_lib import BaseTransformer
+from etl_bin import BaseTransformer
 
 class Transformer(BaseTransformer):
     def __init__(self):
+        ...
+    
+    def transform(self):
         ...
 
 # EOF

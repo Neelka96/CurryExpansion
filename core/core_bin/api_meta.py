@@ -2,7 +2,7 @@
 from flask import request
 
 # Automatic Metadata Creation
-def forge_metadata(
+def _forge_metadata(
         route: str
         ,length: int
         ,desc: str
@@ -47,7 +47,7 @@ def forge_json(
         dict: Full python style JSON ready for Flask export.
     '''
     json_api = {
-        'metadata': forge_metadata(route, len(nest), desc, params)
+        'metadata': _forge_metadata(route, len(nest), desc, params)
         ,'results': nest
     }
     return json_api

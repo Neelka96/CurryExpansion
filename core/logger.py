@@ -3,13 +3,10 @@ import logging.config
 import logging
 
 # Custom libraries
-from factory import get_settings
+from .core_bin import Settings
 
 
-def log_setup() -> None:
-    # Get the settings (first time or from the factory cache)
-    cfg = get_settings()
-
+def log_setup(cfg: Settings) -> None:
     # Add more handlers here if necessary
     root_handlers: list[str] = ['console', 'file']
 

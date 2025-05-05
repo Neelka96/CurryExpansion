@@ -1,4 +1,9 @@
-from .pipeline import Pipeline_Runner
+from .runner import Pipeline_Runner
+
+__all__ = [
+    'Pipeline_Runner'
+]
+
 
 # EOF
 

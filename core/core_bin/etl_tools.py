@@ -2,7 +2,6 @@
 from collections.abc import Callable
 import pandas as pd
 
-
 def create_dict(
         translation: Callable[[int], str]
         ,ref_list: list[str]

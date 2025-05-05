@@ -1,5 +1,8 @@
-from .database import Database
 from .schema import Boroughs, Cuisines, Restaurants
+
+__all__ = [
+    'Boroughs', 'Cuisines', 'Restaurants',
+]
 
 
 # EOF

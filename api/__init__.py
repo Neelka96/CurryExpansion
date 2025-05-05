@@ -1,5 +1,9 @@
 from app import app
 
+__all__ = [
+    'app',
+]
+
 # EOF
 
 if __name__ == '__main__':
