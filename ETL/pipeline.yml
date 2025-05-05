@@ -3,7 +3,7 @@
 # Building blocks for ETL Classes
 extractors:
   NYC_Open:
-    class: ETL.extractors.api_extract.NYC_Open_Extractor
+    class: ETL.extractors.nyc_open.NYC_Restaurants
     params:
       url:
       api_key: ${env:nyc_open_key}
