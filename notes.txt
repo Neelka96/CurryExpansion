@@ -1,0 +1,37 @@
+Day(s)	Focus
+
+1–3	ETL & Prep
+• Grab static CSVs (NYC Open, Yelp categories, ACS) or light API pulls
+• Load into Postgres (or SQLite) via simple Pandas scripts
+• Build 2–3 summary views for Tableau (e.g. avg score by tract, count by cuisine)
+
+4–6	Feature Engineering & ML
+• Join inspection + tract demographics + cuisine lookup
+• Train one model (e.g. decision tree or linear regression)
+• Save predictions back into a summary table (e.g. tbl_predictions)
+
+7–9	Tableau Authoring
+• Connect Tableau Desktop to your DB (or hyper extracts of your summary views)
+• Build a dashboard with:
+– A NYC map colored by predicted score/
+– A filter (parameter) for cuisine type
+– Bar chart of top‐5 tracts per cuisine
+• Publish to Tableau Public (or your Server) as a workbook/extract
+
+10–12	Website Dashboard
+• Scaffold a minimal static site (e.g. GitHub Pages or simple index.html):
+– Embed your Tableau Public viz via the <iframe> or Tableau JS API
+– Add a dropdown (native HTML) that passes the cuisine parameter to the viz
+• If you need authentication or branding, wrap in a single‐route Flask/Express app (∼50 lines)
+
+13–14	Polish & Deliver
+• End‑to‑end testing (data freshness, parameter syncing)
+• Write short README with: setup steps, how to refresh Tableau extract, and how to run local website server
+• Buffer for last‑minute bugfixes
+
+
+
+Inplace Limitations of Current Project Flow:
+- Uses static CSV's instead of dynamic API calls to retrieve data (MUST SWITCH OUT)
+- No Flask API planned for now in case time doesn't permit
+- No staging table for NYC Open even though that would be the ideal practice for a multi table source
