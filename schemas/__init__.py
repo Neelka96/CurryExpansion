@@ -1,7 +1,23 @@
-from .schema import Boroughs, Cuisines, Restaurants
+from .base import Base
+from .star_schema import (
+    DimCuisine, 
+    DimDemographic,
+    DimLocation, 
+    DimRestaurant, 
+    FactFeature, 
+    FactPrediction, 
+    FactRecommendation
+)
 
 __all__ = [
-    'Boroughs', 'Cuisines', 'Restaurants',
+    'Base',
+    'DimCuisine',
+    'DimDemographic',
+    'DimLocation',
+    'DimRestaurant',
+    'FactFeature',
+    'FactPrediction',
+    'FactRecommendation',
 ]
 
 
