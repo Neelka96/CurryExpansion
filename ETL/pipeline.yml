@@ -3,14 +3,11 @@
 # Building blocks for ETL Classes
 extractors:
   NYC_Open:
-    class: ETL.extractors.nyc_open.NYC_Restaurants
+    class: ETL.extractors.nyc_open.Restaurant_Inspection
     params:
-      url:
+      domain: 'data.cityofnewyork.us'
+      uri_id: '43nn-pn8j'
       api_key: ${env:nyc_open_key}
-      sleep: 10
-      timeout: 15
-      delay: 10
-      retry: 2
       years_cutoff: 2
       row_limit: 200000
   Census:
