@@ -21,7 +21,7 @@ extractors:
 transformers:
   transformerName:
     class:
-    params: {}
+    params:
   nextTransformer:
     class:
     params: {}
@@ -37,13 +37,11 @@ loaders:
 pipelines:
   startup:
     extractors: [ NYC_Open, Census ]
-    concat: true
     transformers: [ transformerName, nextTransformer ]
     loaders: [ postgres ]
 
   biweekly_update:
     extractors: [ NYC_Open]
-    concat: false
     transformers: [ transformerName, nextTransformer ]
     loaders: [ postgres ]
 

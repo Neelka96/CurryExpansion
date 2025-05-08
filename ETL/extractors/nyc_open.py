@@ -17,17 +17,16 @@ class Restaurant_Inspection(BaseExtractor):
 
     def extract(self) -> pd.DataFrame:
         select_clause = (
-            'camis AS id,'
+            'camis,'
             'boro,'
             'zipcode,'
             'cuisine_description AS cuisine,'
             'inspection_date,'
+            'inspection_type,'
             'action,'
             'violation_code,'
             'critical_flag,'
             'score,'
-            'record_date,'
-            'inspection_type,'
             'census_tract,'
             'nta'
         )

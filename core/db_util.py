@@ -2,9 +2,9 @@
 from math import ceil
 from contextlib import contextmanager
 from collections.abc import Sequence, Generator
-from sqlalchemy import Select, Row, insert
+from sqlalchemy import Select, Row
 from sqlalchemy.sql import Executable
-from sqlalchemy.orm import DeclarativeMeta, sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session
 import pandas as pd
 
 # Custom libraries
@@ -65,35 +65,6 @@ class Database:
         with self.get_session() as session:
             result = session.execute(stmt, params) if params else session.execute(stmt)
             return result.scalars().all() if isinstance(stmt, Select) else None
-
-    def fresh_table(
-            self
-            ,tableClass: DeclarativeMeta
-            ,df: pd.DataFrame
-            ) -> None:
-        '''Creates new table, expects it to be empty.
-
-        :param tableClass: Staged table.
-        :type tableClass: DeclarativeMeta
-        :param df: Data to write to table.
-        :type df: pd.DataFrame
-
-        :returns: Rows changed.
-        :rtype: int
-        '''
-        # Insert the table from scratch via chunks in case of large size
-        chunk_size = int(1e4)
-        total_rows = df.shape[0]
-        num_chunks = ceil(total_rows / chunk_size)
-        rows_added = 0
-
-        stmt = insert(tableClass)
-        for i in range(num_chunks):
-            chunk = df.iloc[i * chunk_size : (i+1) * chunk_size]
-            rows_added += chunk.shape[0]
-            self.execute_query(stmt, chunk.to_dict('records')) # Combining of insert() from core w/ session.execute() utilizes ORM layer
-        log.debug('Table built successfully. %s rows.', rows_added)
-        return None
 
 # EOF
 

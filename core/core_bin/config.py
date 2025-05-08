@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # PostgreSQL URI construction parts - db_user_pass ALWAYS REQUIRED
     db_user_name:   str                 = 'curryexp'
     db_user_pass:   SecretStr
-    db_name:        str                 = 'curryexpander'
+    db_name:        str                 = 'curryinspection'
     db_host:        str                 = 'localhost'
     db_port:        int                 = 5432
 

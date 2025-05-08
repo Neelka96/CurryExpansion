@@ -1,6 +1,9 @@
 # Mac OS Directory Config File
 .DS_Store
 
+# Extra Venv
+ml/
+
 # CSV Depedencies
 resources/
 

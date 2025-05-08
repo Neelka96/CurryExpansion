@@ -4,9 +4,7 @@ import pandas as pd
 from etl_bin import BaseTransformer
 
 class Transformer(BaseTransformer):
-    def __init__(self, df: pd.DataFrame):
-        self.df = df.dropna(how = 'any')
-    
+
     def _map_actions(self):
         self.action_map = {
             'Violations were cited in the following area(s).': 'cited_violation',
@@ -17,9 +15,61 @@ class Transformer(BaseTransformer):
         }
         self.df['action'] = self.df['action'].map(self.action_map)
 
-    def transform(self):
+    def _split_into_two_columns(self, cols: list[str]):
+        self.df[cols] = (
+            self.df[cols[0]]
+            .str
+                .split('/', n = 1, expand = True)
+            .rename(
+                columns = {0: cols[0], 1: cols[1]}
+            )
+        )
+        for col in cols:
+            self.df[col] = self.df[col].str.strip()
+
+        cols = list(self.df.columns)
+        new_order = cols[:6]
+        new_order.append(cols[-1])
+        new_order.extend(cols[6:-1])
+        self.df = self.df[new_order]
+        return self
+    
+    def _fill_nulls(self, row_mask: pd.Series, target: str, fill: int | str):
+        self.df.loc[row_mask, target] = self.df.loc[row_mask, target].fillna(fill)
+        return self
+
+    def _convert_int(self, cols: list[str]):
+        self.df[cols] = self.df[cols].astype(int)
+        return self
+
+    def _convert_dt(self, cols: list[str]):
+        self.df[cols] = self.df[cols].apply(pd.to_datetime)
+        return self
+    
+
+    def transform(self, df: pd.DataFrame):
+        self.df = df
         self._map_actions()
+        self._split_into_two_columns(['inspection_type', 'inspection_subtype'])
+
+        null_score = (self.df['score'].isna())
+        masks = [
+            ((self.df['critical_flag'] == 'Not Applicable') & (null_score)),
+            ((self.df['action'] == 'no_violations') & (null_score)),
+            ((self.df['violation_code'].isna()) & (null_score))
+        ]
+        for mask in masks:
+            self._fill_nulls(mask, 'score', int(0))
+        
+        self._fill_nulls(self.df['violation_code'].isna(), 'violation_code', str('None'))
+
+        self.df.dropna(how = 'any', inplace = True)
+
+        self._convert_int(['id', 'zipcode', 'score', 'census_tract'])
+        self._convert_dt(['inspection_date'])
+
         return self.df
+
 
 # EOF
 

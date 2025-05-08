@@ -31,7 +31,6 @@ class Component_Block(BaseModel):
 
 class Pipeline_Block(BaseModel):
     extractors:     list[str]
-    concat:         bool                    = Field(default = False, description = 'Concatenation boolean for extracted sources, found in pipeline.yml')
     transformers:   list[str]
     loaders:        list[str]
 

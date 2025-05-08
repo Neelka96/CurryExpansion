@@ -1,23 +1,9 @@
 from .base import Base
-from .star_schema import (
-    DimCuisine, 
-    DimDemographic,
-    DimLocation, 
-    DimRestaurant, 
-    FactFeature, 
-    FactPrediction, 
-    FactRecommendation
-)
+from .inspection import Inspection
 
 __all__ = [
     'Base',
-    'DimCuisine',
-    'DimDemographic',
-    'DimLocation',
-    'DimRestaurant',
-    'FactFeature',
-    'FactPrediction',
-    'FactRecommendation',
+    'Inspection',
 ]
 
 
