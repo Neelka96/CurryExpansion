@@ -50,7 +50,7 @@ class Pipeline_Runner:
         comp_cfg: Component_Block = getattr(self.etl_cfg, component_type)[name]
         module_name, cls_name = comp_cfg.class_name.rsplit('.', 1)
         Impl = getattr(import_module(module_name), cls_name)
-        log.debug('Crafting import %s.%s.', (module_name, cls_name))
+        log.debug('Crafting import %s.%s.', module_name, cls_name)
         return Impl(**(comp_cfg.params or {}))
 
     # Execution for pipeline begins and ends here
