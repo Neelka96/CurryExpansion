@@ -4,12 +4,12 @@ import datetime as dt
 import pandas as pd
 
 # Abstract class to de-couple extraction classes from Pipeline
-from etl_bin import BaseExtractor
+from ETL.etl_bin import BaseExtractor
 
-class Restaurant_Inspection(BaseExtractor):
-    def __init__(self, domain: str, uri_id: str, api_key: str, years_cutoff: int, row_limit: int):
+class Raw_NYC_Open(BaseExtractor):
+    def __init__(self, domain: str, uri_id: str, nyc_open_key: str, years_cutoff: int, row_limit: int):
         self.uri_id = uri_id
-        self.client = Socrata(domain, api_key)
+        self.client = Socrata(domain, nyc_open_key)
 
         self.date_lim = (dt.datetime.now() - dt.timedelta(days = years_cutoff * 365)).isoformat()
         self.row_limit = row_limit
@@ -28,7 +28,9 @@ class Restaurant_Inspection(BaseExtractor):
             'critical_flag,'
             'score,'
             'census_tract,'
-            'nta'
+            'nta,'
+            'latitude,'
+            'longitude'
         )
         where_clause = f'inspection_date > "{self.date_lim}" AND cuisine IS NOT NULL'
         return pd.DataFrame.from_records(

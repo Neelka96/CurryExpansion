@@ -3,51 +3,44 @@
 # Building blocks for ETL Classes
 extractors:
   NYC_Open:
-    class: ETL.extractors.nyc_open.Restaurant_Inspection
+    class: ETL.extractors.nyc_open.Raw_NYC_Open
     params:
       domain: 'data.cityofnewyork.us'
       uri_id: '43nn-pn8j'
-      api_key: ${env:nyc_open_key}
-      years_cutoff: 2
-      row_limit: 200000
-  Census:
-    class:
-    params:
-      url:
-      api_key: ${env:census_key}
-      sleep:
-      timeout:
+      nyc_open_key: ${env:nyc_open_key}
+      years_cutoff: 7
+      row_limit: 1000000
+  from_postgres:
+    class: ETL.extractors.sql_db.Postgres_Features
+    params: {}
 
 transformers:
-  transformerName:
-    class:
-    params:
-  nextTransformer:
-    class:
+  main_cleaner:
+    class: ETL.transformers.nyc_open.NYC_Open_Cleaner
+    params: {}
+  ml_preprocess:
+    class: ETL.transformers.sql_db.Preprocess_ML_Data
     params: {}
 
 loaders:
-  postgres:
-    class:
+  to_postgres:
+    class: ETL.loaders.nyc_open.Load_Inspections
     params:
-      dataset:
-      table:
+      constraint_name: 'uq_inspection_natural'
 
 # Putting pipelines together
 pipelines:
-  startup:
-    extractors: [ NYC_Open, Census ]
-    transformers: [ transformerName, nextTransformer ]
-    loaders: [ postgres ]
+  get_data:
+    extractors: [ NYC_Open ]
+    transformers: [ main_cleaner ]
+    loaders: [ to_postgres ]
 
-  biweekly_update:
-    extractors: [ NYC_Open]
-    transformers: [ transformerName, nextTransformer ]
-    loaders: [ postgres ]
+  train_model:
+    extractors: [ from_postgres ]
+    transformers: [ ml_preprocess ]
+    loaders: [  ]
 
 # Grouping pipelines together
 tasks:
-  name1:
-    pipelines: [ startup, biweekly_update ]
-  name2:
-    pipelines: [ startup ]
+  all:
+    pipelines: [ get_data, train_model ]

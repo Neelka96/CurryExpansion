@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field
 import yaml, os, re
 
-ENV_REF = re.compile(r'\$\{env:([A-Z0-9_]+)\}')
+ENV_REF = re.compile(r'\$\{env:([A-Za-z0-9_]+)\}')
 
 def expand_env(obj) -> dict:
     '''Recursive expansion of python object for inserting environment variables.
@@ -26,8 +26,8 @@ def expand_env(obj) -> dict:
 
 
 class Component_Block(BaseModel):
-    class_name:     str                     = Field(..., alias = 'class')
-    params:         dict[str, str | None]   = Field(default_factory = dict)
+    class_name:     str                         = Field(..., alias = 'class')
+    params:         dict[str, int | str | None] = Field(default_factory = dict)
 
 class Pipeline_Block(BaseModel):
     extractors:     list[str]

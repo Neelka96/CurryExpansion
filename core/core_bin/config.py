@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     # Basic App/Env Configurations
     app_env:        Envs                = 'development'
     debug:          bool                = True
-    root:           Path                = Path(__file__).resolve().parents[1]
-    templates_stem: Path                = Path('api/templates')
+    root:           Path                = Path(__file__).resolve().parents[2]
+    # templates_stem: Path                = Path('api/templates')
 
     # Log Configurations
     log_level:      LogLevels           = 'INFO'
@@ -29,15 +29,15 @@ class Settings(BaseSettings):
 
     # Drives available to store persistent data and the drive chosen by user or default for environment
     mnt_drive:      Path                = '/mnt/shared'
-    loc_drive_stem: Path                = Path('resources')
+    loc_drive_stem: Path                = root / 'resources'
 
     # CaaS secrets
     caas_conn:      SecretStr | None    = None  # Default of None -> (Prod) **REQUIRED | (Dev) None
     caas_mnt_conn:  SecretStr | None    = None  # ^^^ Same as above
 
     # PostgreSQL URI construction parts - db_user_pass ALWAYS REQUIRED
-    db_user_name:   str                 = 'curryexp'
-    db_user_pass:   SecretStr
+    db_user_name:   str                 = 'postgres'
+    db_user_pass:   SecretStr           = 'postgres'
     db_name:        str                 = 'curryinspection'
     db_host:        str                 = 'localhost'
     db_port:        int                 = 5432
@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     # Fixes the path and creates directory if it doesn't exist
     def _mkdir_get_path(self, stem: Path) -> Path:
         p = self.root / stem
-        p.mkdir(parent = True, exist_ok = True)
+        p.mkdir(parents = True, exist_ok = True)
         return p
 
     @computed_field

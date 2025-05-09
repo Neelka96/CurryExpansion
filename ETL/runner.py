@@ -1,7 +1,6 @@
 # Import dependencies
 from typing import overload, Literal
 from importlib import import_module
-import pandas as pd
 
 # Allow logging from top-level
 import logging
@@ -9,7 +8,7 @@ log = logging.getLogger(__name__)
 
 # Custom libraries
 from core import log_exceptions
-from .etl_bin import BaseExtractor, BaseTransformer, BaseLoader, Component_Block, Pipeline_Block, Task_Block, ETL_Config
+from ETL.etl_bin import BaseExtractor, BaseTransformer, BaseLoader, Component_Block, Pipeline_Block, Task_Block, ETL_Config
 
 
 class Pipeline_Runner:
