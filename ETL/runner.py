@@ -74,9 +74,6 @@ class Pipeline_Runner:
         # Extract all sources
         dfs = [self._make('extractors', key).extract() for key in pipe.extractors]
 
-        # Checks for concat requirement
-        # if pipe.concat: dfs = [pd.concat(dfs, ignore_index = True)]
-
         # Transform all extractions
         for df in dfs:
             for key in pipe.transformers:

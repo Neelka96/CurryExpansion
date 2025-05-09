@@ -1,5 +1,7 @@
 # Import dependencies
 import pandas as pd
+import logging
+log = logging.getLogger(__name__)
 
 from ETL.etl_bin import BaseTransformer
 
@@ -29,14 +31,14 @@ class NYC_Open_Cleaner(BaseTransformer):
 
         cols = list(self.df.columns)
         new_order = cols[:6]
-        new_order.append(cols[-1])
-        new_order.extend(cols[6:-1])
+        new_order.extend(reversed(cols[-2:]))
+        new_order.extend(cols[6:-2])
+
         self.df = self.df[new_order]
         return self
     
     def _fill_nulls(self, row_mask: pd.Series, target: str, fill: int | str):
-        filled = self.df.loc[row_mask, target].fillna(fill)
-        self.df.loc[row_mask, target] = filled.infer_objects(copy = False)
+        self.df.loc[row_mask, target] = self.df.loc[row_mask, target].fillna(fill)
         return self
 
     def _convert_int(self, cols: list[str]):
@@ -60,9 +62,9 @@ class NYC_Open_Cleaner(BaseTransformer):
             ((self.df['violation_code'].isna()) & (null_score))
         ]
         for mask in masks:
-            self._fill_nulls(mask, 'score', int(0))
+            self._fill_nulls(mask, 'score', '0')
         
-        self._fill_nulls(self.df['violation_code'].isna(), 'violation_code', str('None'))
+        self._fill_nulls(self.df['violation_code'].isna(), 'violation_code', 'None')
         return self
 
 
@@ -70,6 +72,8 @@ class NYC_Open_Cleaner(BaseTransformer):
         self.df = df
         self._map_actions()
         self._split_into_two_columns(['inspection_type', 'inspection_subtype'])
+
+        self.df = self.df.convert_dtypes()
 
         self._null_handler()
 
