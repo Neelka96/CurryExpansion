@@ -8,7 +8,7 @@ from pathlib import Path
 import logging
 
 # Custom libraries
-from core import log_setup, get_settings
+from core import log_setup, get_settings, log_exceptions
 from ETL import Pipeline_Runner
 
 
@@ -17,11 +17,16 @@ class CLIArgs(Namespace):
     name: str
     config: str
 
+@log_exceptions
 def main() -> None:
     load_dotenv()               # Bring in environment variables first
     env_cfg = get_settings()    # Initialize settings for the 1st time - saved in lru_cache
     log_setup(env_cfg)          # Master log setup with Settings obj for lower-level files
     log = logging.getLogger(__name__)
+
+    # Extra debug log for settings
+    log.info('ETL Top-Level accessed. Configured for environment: %s.' % env_cfg.app_env)
+    log.debug('Key variables parsed include {Storage Path: %s, Database Name: %s}', env_cfg.storage, env_cfg.db_name)
 
     # Create argument parsers
     parser = ArgumentParser(description = 'Run one of the configured ETL pipelines.')
@@ -43,8 +48,14 @@ def main() -> None:
     etl_cfg_path = Path(args.config).resolve()
     task_or_pipe_name = args.name
     
+    # Logs for CLI arguments
+    log.debug('Initializing Pipeline_Runner with ETL config file: %s.' % etl_cfg_path)
+
     # Instantiate the runner
     runner = Pipeline_Runner(etl_cfg_path = str(etl_cfg_path))
+
+    # Another log for the kickoff
+    log.debug('Kicking off pipeline, locating name/task: %s.' % task_or_pipe_name)
 
     # Kick off pipeline
     runner.run(task_or_pipe_name)

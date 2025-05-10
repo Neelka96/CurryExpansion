@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 # Custom libraries
 from core import log_exceptions
-from ETL.etl_bin import BaseExtractor, BaseTransformer, BaseLoader, Component_Block, Pipeline_Block, Task_Block, ETL_Config
+from ETL.etl_bin import BaseExtractor, BaseTransformer, BaseLoader, Component_Block, Pipeline_Block, ETL_Config
 
 
 class Pipeline_Runner:
@@ -75,9 +75,10 @@ class Pipeline_Runner:
         dfs = [self._make('extractors', key).extract() for key in pipe.extractors]
 
         # Transform all extractions
-        for df in dfs:
+        for i, df in enumerate(dfs):
             for key in pipe.transformers:
                 df = self._make('transformers', key).transform(df)
+            dfs[i] = df
 
         # Load cleaned data
         for df in dfs:
