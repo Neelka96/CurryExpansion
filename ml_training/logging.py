@@ -22,7 +22,6 @@ class Log_Training:
         self.log_path = log_dir / log_stem
 
         # If the file doesn’t exist, write a header
-        # if not os.path.isfile(self.log_path):
         if not self.log_path.is_file():
             with open(self.log_path, 'w', newline='') as f:
                 writer = csv.writer(f)
@@ -34,7 +33,8 @@ class Log_Training:
             model_name: str = None,
             params: dict = None,
             metrics: dict = None,
-            extra: dict = None):
+            extra: dict = None
+        ):
         '''
         Write one experiment record.
 
@@ -70,3 +70,11 @@ class Log_Training:
             writer.writerow(row)
 
         return None
+    
+    def train_and_log_mord(self, X, y, test_size, **mord_kwargs):
+        Xtr, Xte, ytr, yte = train_test_split(X, y, test_size = test_size, stratify = y)
+        m = mord.LogisticIT(**mord_kwargs).fit(Xtr, ytr)
+        preds = m.predict(Xte)
+        metrics = {'accuracy': accuracy_score(yte, preds)}
+        self.log(model=m, metrics=metrics)
+        return print(metrics)

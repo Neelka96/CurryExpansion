@@ -11,7 +11,7 @@ setup(
         'pandas~=2.2.3',
         'psycopg2~=2.9.10',
         'pydantic~=2.11.4',
-        'pydantic-settings~=2.9.1'
+        'pydantic-settings~=2.9.1',
         'python-dotenv~=1.1.0',
         'PyYAML~=6.0.2',
         'scikit-learn~=1.6.1',
