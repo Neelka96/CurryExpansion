@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy_utils import create_database, database_exists
 
 # Custom libraries
-from .core_bin import Settings
+from core.core_bin import Settings
 from schemas import Base
 
 @lru_cache()

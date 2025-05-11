@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker, Session
 import pandas as pd
 
 # Custom libraries
-from .core_bin import auto_log_cls
+from core.core_bin import auto_log_cls
 
 # Create logger
 import logging

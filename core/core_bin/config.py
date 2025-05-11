@@ -1,8 +1,13 @@
+# Import dependencies
 from typing import Literal, Any, TypeAlias
 from pathlib import Path
 
+# pydantic specific dependencies
 from pydantic import SecretStr, model_validator, field_validator, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Subpkg project helpers
+from core.core_bin.simple_helpers import find_root
 
 # Type aliases to make improve readability of Settings fields
 Envs:       TypeAlias   = Literal['development', 'production']
@@ -10,18 +15,17 @@ LogLevels:  TypeAlias   = Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL
 
 # Quick FYI for reading of configuration
 # Pydantic's BaseSettings validators works in the flow of: 
-# (mode = 'before') model -> field -> (mode = 'after') field -> model
+# Pre construct model, field -> Post construct field, model -> computed fields
 
 class Settings(BaseSettings):
     # Base options
-    model_config = SettingsConfigDict(env_file = None, case_sensitive = False)
+    model_config = SettingsConfigDict(env_file = '.env', case_sensitive = False)
 
     # API keys removed from settings as they're included in expansion of the YAML
     # Basic App/Env Configurations
     app_env:        Envs                = 'development'
     debug:          bool                = True
-    root:           Path                = Path(__file__).resolve().parents[2]
-    # templates_stem: Path                = Path('api/templates')
+    root:           Path                = find_root()
 
     # Log Configurations
     log_level:      LogLevels           = 'INFO'
@@ -38,7 +42,7 @@ class Settings(BaseSettings):
     # PostgreSQL URI construction parts - db_user_pass ALWAYS REQUIRED
     db_user_name:   str                 = 'postgres'
     db_user_pass:   SecretStr           = 'postgres'
-    db_name:        str                 = 'curryinspection'
+    db_name:        str
     db_host:        str                 = 'localhost'
     db_port:        int                 = 5432
 
@@ -80,11 +84,8 @@ class Settings(BaseSettings):
         p.mkdir(parents = True, exist_ok = True)
         return p
 
-    @computed_field
-    @property
-    def templates(self) -> Path:
-        return self._mkdir_get_path(self.templates_stem)
 
+    # 4) -- Computed field creation after full object construction --
     @computed_field
     @property
     def loc_drive(self) -> Path:
