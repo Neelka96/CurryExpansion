@@ -9,13 +9,17 @@ from pathlib import Path
 class CLIArgs(Namespace):
     venv_name: str
 
-def find_root(marker_files: str = ['pyproject.toml', 'setup.py', '.git', '.gitignore', '.env', 'README.md']) -> Path:
+
+# Absolute root path finder
+def find_root(marker_files: str = ['setup.py', '.git', '.gitignore', '.env', 'README.md']) -> Path:
     here = Path(__file__).resolve()
     for parent in (here, *here.parents):
         if any((parent / m).exists() for m in marker_files):
             return parent
     raise RuntimeError('Could not locate project root.')
 
+
+# Called by main() when executing the file. This is the main payload.
 def create_env(venv_name: str):
     # Check for windows OS
     win32 = True if sys.platform == 'win32' else False
@@ -52,7 +56,7 @@ def create_env(venv_name: str):
     
     return None
 
-
+# Parse arguments, callable from the CLI or runnable as a subprocess now!
 def main():
     parser = ArgumentParser(
         description = 'Bootstrap a Python venv and install your package in editable mode'

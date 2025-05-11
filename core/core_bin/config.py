@@ -7,7 +7,7 @@ from pydantic import SecretStr, model_validator, field_validator, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Subpkg project helpers
-from core.core_bin.simple_helpers import find_root
+from core.core_bin.tools import find_root
 
 # Type aliases to make improve readability of Settings fields
 Envs:       TypeAlias   = Literal['development', 'production']
