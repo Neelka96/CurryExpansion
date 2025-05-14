@@ -2,12 +2,10 @@
 
 # Scikit Helpers
 from sklearn import set_config
-set_config(transform = 'pandas')
-
 from sklearn.base import clone
 from sklearn.metrics import make_scorer, cohen_kappa_score
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
 from sklearn.pipeline import Pipeline
 
 # Scikit/Compatible Models
@@ -27,6 +25,7 @@ from core import get_settings
 from ETL.etl_bin import BaseLoader
 from ml_lib import LGBMOrdinal, suppress_warnings, read_write_grid, full_est_scores
 
+
 # Loader to be called by pipeline runner
 class ModelLoader(BaseLoader):
     def __init__(
@@ -41,6 +40,7 @@ class ModelLoader(BaseLoader):
             final_cv_n: int = 3,
             n_jobs: int = -1
         ):
+        set_config(transform_output = 'pandas')
         self.cfg = get_settings()
         self.name = name
         if cutoff is not None:
@@ -81,7 +81,7 @@ class ModelLoader(BaseLoader):
             [
                 ('num', StandardScaler(), self.numbers),
                 ('cyc', 'passthrough', self.cycles),
-                ('cat', OneHotEncoder(handle_unknown = 'ignore'), self.categories),
+                ('cat', OneHotEncoder(handle_unknown = 'ignore', sparse_output = False), self.categories),
             ],
         )
         self.prep.set_output(transform = 'pandas')
@@ -106,6 +106,28 @@ class ModelLoader(BaseLoader):
         )
         search_grid.fit(self.X_tr, self.y_tr)
         return search_grid
+
+    def _run_lgbm_search(self, grid: dict):
+        prep: ColumnTransformer = clone(self.prep)
+        prep.set_output(transform = 'pandas')
+        pipe = Pipeline(
+            [
+                ('prep', prep),
+                ('to_numpy', FunctionTransformer(func = pd.DataFrame.to_numpy, validate = False)),
+                ('clf', LGBMOrdinal())
+            ],
+            memory = self.cache
+        )
+        with suppress_warnings():
+            search_grid = GridSearchCV(
+                pipe,
+                grid,
+                cv = TimeSeriesSplit(n_splits = self.tscv_n),
+                scoring = self.kappa_scorer,
+                n_jobs = self.n_jobs
+            )
+            search_grid.fit(self.X_tr, self.y_tr)
+        return search_grid
     
     def write_model(self, model: Pipeline):
         model_name = f'{self.name}.joblib'
@@ -117,7 +139,7 @@ class ModelLoader(BaseLoader):
 
         _s = model.named_steps['stack']
         meta = {
-            'model_file': model,
+            'model_file': model_path,
             'train_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'estimators': [name for name, _ in _s.estimators],
             'final_estimator': type(_s.final_estimator).__name__,
@@ -136,23 +158,23 @@ class ModelLoader(BaseLoader):
         # --- ordinal logistic models ---
         mord_grid = {
             'clf':                  [LogisticIT()],
-            'clf__alpha':           [0.1, 1.0],
-            'clf__max_iter':        [200, 500],
+            'clf__alpha':           [1.0],
+            'clf__max_iter':        [250, 500],
         }
         # --- random forest baseline ---
         randf_grid = {
             'clf':                  [RandomForestClassifier(random_state = 42)],
             'clf__n_estimators':    [100, 250],
-            'clf__max_depth':       [5, 15],
+            'clf__max_depth':       [15],
             'clf__min_samples_leaf':[1, 3,],
             'clf__class_weight':    ['balanced'],
         }
         # --- gradient-boosting regressor + round-to-ordinal trick ---
         lgbm_grid = {
             'clf':                          [LGBMOrdinal(random_state = 42, verbosity = -1)],
-            'clf__n_estimators':            [100, 200, 300],
-            'clf__max_depth':               [3, 5, 7, 9, 11],
-            'clf__learning_rate':           [0.1, 1.0],
+            'clf__n_estimators':            [100, 200],
+            'clf__max_depth':               [7, 9],
+            'clf__learning_rate':           [0.1],
             'clf__reg_lambda':              [0.1, 1],
         }
         mord_search  = self._run_search( mord_grid)
@@ -163,7 +185,7 @@ class ModelLoader(BaseLoader):
         read_write_grid(randf_search, self.all_Xy)
         full_est_scores(randf_search, self.all_Xy)
 
-        lgbm_search  = self._run_search( lgbm_grid)
+        lgbm_search  = self._run_lgbm_search(lgbm_grid)
         read_write_grid(lgbm_search, self.all_Xy)
         full_est_scores(lgbm_search, self.all_Xy)
         with suppress_warnings():
