@@ -82,7 +82,7 @@ pipelines:
 
   get_predictions:
     extractors: [ quick_csv ]
-    transformers: [ passthrough ]
+    transformers: [ new_ml_prep ]
     loaders: [ make_predictions ]
 
 
@@ -92,3 +92,5 @@ tasks:
     pipelines: [ get_data_csv, grid_tune_train, get_predictions ]
   fresh_predictions:
     pipelines: [ get_data_csv, get_predictions ]
+  fresh_model:
+    pipelines: [ grid_tune_train, get_predictions ]

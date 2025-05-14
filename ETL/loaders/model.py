@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.linear_model import RidgeClassifier
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
-from mord import LogisticIT, LogisticAT
+from mord import LogisticIT
 
 # Other major externals
 from datetime import datetime, timezone, timedelta
@@ -52,6 +52,7 @@ class ModelLoader(BaseLoader):
         self.cycles = cycles
         self.categories = categories
         self.kappa_scorer = make_scorer(cohen_kappa_score, weights = 'quadratic')
+        self.cache = joblib.Memory('cache_dir', verbose = 0)
 
 
     def split_data(self):
@@ -72,7 +73,7 @@ class ModelLoader(BaseLoader):
         return self
 
     def _mk_prep(self):
-        return ColumnTransformer(
+        self.prep = ColumnTransformer(
             [
                 ('num', StandardScaler(), self.numbers),
                 ('cyc', 'passthrough', self.cycles),
@@ -83,9 +84,10 @@ class ModelLoader(BaseLoader):
     def mk_pipeline(self):
         self.pipe = Pipeline(
             [
-                ('prep', self._mk_prep()),
+                ('prep', self.prep),
                 ('clf', LogisticIT())
-            ]
+            ],
+            memory = self.cache
         )
         return self
 
@@ -100,18 +102,21 @@ class ModelLoader(BaseLoader):
         search_grid.fit(self.X_tr, self.y_tr)
         return search_grid
     
-    def write_model(self, model: StackingClassifier):
-        model = f'{self.name}.joblib'
+    def write_model(self, model: Pipeline):
+        model_name = f'{self.name}.joblib'
         json_ = f'{self.name}_meta.json'
-        model_path = self.cfg.storage / model
+        model_path = self.cfg.storage / model_name
         json_path = self.cfg.storage / json_
+        
         joblib.dump(model, model_path, compress = ('gzip', 3))
+
+        _s = model.named_steps['stack']
         meta = {
             'model_file': model,
             'train_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'estimators': [name for name, _ in model.estimators],
-            'final_estimator': type(model.final_estimator).__name__,
-            'cv_folds': model.cv
+            'estimators': [name for name, _ in _s.estimators],
+            'final_estimator': type(_s.final_estimator).__name__,
+            'cv_folds': _s.cv
         }
         with open(json_path, 'w') as f:
             json.dump(meta, f, indent=2)
@@ -120,10 +125,12 @@ class ModelLoader(BaseLoader):
     def load(self, df: pd.DataFrame) -> None:
         self.df = df
         self.split_data()
+        self._mk_prep()
         self.mk_pipeline()
+
         # --- ordinal logistic models ---
         mord_grid = {
-            'clf':                  [LogisticIT(), LogisticAT()],
+            'clf':                  [LogisticIT()],
             'clf__alpha':           [0.1, 1.0],
             'clf__max_iter':        [200, 500],
         }
@@ -160,13 +167,21 @@ class ModelLoader(BaseLoader):
                 ('randf', randf_search.best_estimator_),
                 ('lgbm', lgbm_search.best_estimator_)
             ]
-            stack = StackingClassifier(
+            _stack = StackingClassifier(
                 estimators = estimators,
                 final_estimator = RidgeClassifier(alpha = 1.0),
                 cv = self.final_cv_n,
                 passthrough = False
             )
+            stack = Pipeline(
+                [
+                    ('prep', self.prep),
+                    ('stack', _stack),
+                ],
+                memory = self.cache
+            )
             stack.fit(self.X_tr, self.y_tr)
-            
+
+        # joblib.dump(stack, self.pipeline, compress = ('gzip', 3))
         self.write_model(stack)
         return None

@@ -1,5 +1,5 @@
 # Import dependencies
-from sklearn.ensemble import StackingClassifier
+from sklearn.pipeline import Pipeline
 import pandas as pd
 import joblib
 import json
@@ -13,10 +13,11 @@ from ml_lib import LGBMOrdinal
 
 class MakePredictions(BaseLoader):
     def __init__(self, name: str):
-        log.info('Loading in serialized learner.')
+        log.info('Loading in serialized pipeline.')
         self.cfg = get_settings()
-        self.p = self.cfg.storage / f'{name}.joblib'
-        self.model: StackingClassifier = joblib.load(self.p)
+        pipe_path = self.cfg.storage / f'{name}.joblib'
+        self.model: Pipeline = joblib.load(pipe_path)
+
 
     def _predictions(self):
         log.debug('Making predictions using model.')
@@ -27,17 +28,17 @@ class MakePredictions(BaseLoader):
     def _build_json(self):
         log.debug('Crafting JSON for metadata.')
         output = []
+        self.df = self.df.reset_index().rename(columns={'index': 'inspection_id'})
         for idx, (row_id, pred, prob) in enumerate(zip(self.df['inspection_id'], self.preds, self.probs)):
             output.append({
                 'inspection_id': int(row_id),
                 'predicted_score': int(pred),
                 'probabilities': prob
             })
-
         with open('predictions.json', 'w') as f:
             json.dump(output, f, indent=2)
-
         log.info(f'Wrote {len(output)} predictions to predictions.json')
+
 
     def load(self, df: pd.DataFrame) -> None:
         log.info('Starting model load.')
