@@ -105,7 +105,7 @@ class ModelLoader(BaseLoader):
         json_ = f'{self.name}_meta.json'
         model_path = self.cfg.storage / model
         json_path = self.cfg.storage / json_
-        joblib.dump(model, model_path)
+        joblib.dump(model, model_path, compress = ('gzip', 3))
         meta = {
             'model_file': model,
             'train_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
