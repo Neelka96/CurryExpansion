@@ -1,6 +1,6 @@
 {
   "model_file": "curry_inspector_20250514_v1.joblib",
-  "train_date": "2025-05-14 13:02:47",
+  "train_date": "2025-05-14 13:18:56",
   "estimators": [
     "logit",
     "randf",

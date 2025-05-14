@@ -1,9 +1,6 @@
 # Mac OS Directory Config File
 .DS_Store
 
-# Unzipped Model
-*.joblib
-
 # Extra Venv
 ml/
 
