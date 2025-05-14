@@ -84,6 +84,7 @@ class ModelLoader(BaseLoader):
                 ('cat', OneHotEncoder(handle_unknown = 'ignore'), self.categories),
             ],
         )
+        self.prep.set_output(transform = 'pandas')
     
     def mk_pipeline(self):
         self.pipe = Pipeline(
@@ -177,9 +178,11 @@ class ModelLoader(BaseLoader):
                 cv = self.final_cv_n,
                 passthrough = False
             )
+            prep: ColumnTransformer = clone(self.prep)
+            prep.set_output(transform = 'pandas')
             stack = Pipeline(
                 [
-                    ('prep', clone(self.prep)),
+                    ('prep', prep),
                     ('stack', _stack),
                 ],
                 memory = self.cache
