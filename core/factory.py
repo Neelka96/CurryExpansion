@@ -1,5 +1,4 @@
 # Import dependencies
-from pathlib import Path
 from functools import lru_cache
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import sessionmaker, Session

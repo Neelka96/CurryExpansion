@@ -9,7 +9,8 @@ import ast
 import os
 
 # Bring in Core
-from core import find_root
+from core import get_settings
+cfg = get_settings()
 
 # Boiler plate for warning supression
 @contextmanager
@@ -88,7 +89,7 @@ def _parse_params(cell: str) -> dict:
 
 # Expand df takes in a dataframe and applies parse_params and expands the dataframe
 def expand_csv(file_name = 'grid_log.csv'):
-    df = pd.read_csv(find_root() / file_name)
+    df = pd.read_csv(cfg.root / file_name)
     df['params'] = df['params'].apply(_parse_params)
     params = pd.json_normalize(df['params'])
 
@@ -97,7 +98,7 @@ def expand_csv(file_name = 'grid_log.csv'):
 
 
 def read_write_grid(search_grid: GridSearchCV, file_name = 'grid_log.csv', overwrite = False):
-    path = find_root() / file_name
+    path = cfg.root / file_name
     df = grid_to_pd(search_grid)
     if not overwrite:
         if path.is_file():
@@ -147,6 +148,6 @@ def learning_curve_plot(
     plt.xlabel('Number of training examples')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.savefig('name', dpi = 300, bbox_inches = 'tight')
+    plt.savefig((cfg.storage / f'{name}.png'), dpi = 300, bbox_inches = 'tight')
     plt.show()
     return None

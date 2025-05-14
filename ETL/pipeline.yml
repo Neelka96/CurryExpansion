@@ -87,5 +87,5 @@ pipelines:
 tasks:
   fresh_train:
     pipelines: [ get_data_csv, grid_tune_train, get_predictions ]
-  presentation:
+  fresh_predictions:
     pipelines: [ get_data_csv, get_predictions ]

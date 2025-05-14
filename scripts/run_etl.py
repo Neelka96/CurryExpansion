@@ -8,7 +8,7 @@ from pathlib import Path
 import logging
 
 # Custom libraries
-from core import log_setup, get_settings, log_exceptions
+from core import log_setup, get_settings, log_exceptions, find_root
 from ETL import TaskRunner
 
 
@@ -34,9 +34,10 @@ def main() -> None:
         'name',
         help = 'The name of the task (pipeline grouping) or single pipeline to run.'
     )
+    yml_path = find_root() / 'ETL/pipeline.yml'
     parser.add_argument(
         '--config',
-        default = 'ETL/pipeline.yml',
+        default = yml_path,
         help = 'Path to the YAML Pipeline (default: %(default)s)',
         dest = 'config'
     )

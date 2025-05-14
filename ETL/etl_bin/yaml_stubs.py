@@ -1,5 +1,6 @@
 # Import dependencies
 from pydantic import BaseModel, Field
+from typing import Any
 import yaml, os, re
 
 ENV_REF = re.compile(r'\$\{env:([A-Za-z0-9_]+)\}')
@@ -26,8 +27,8 @@ def expand_env(obj) -> dict:
 
 
 class YamlComponents(BaseModel):
-    class_name:     str                         = Field(..., alias = 'class')
-    params:         dict[str, int | str | None] = Field(default_factory = dict)
+    class_name:     str             = Field(..., alias = 'class')
+    params:         dict[str, Any]  = Field(default_factory = dict)
 
 class YamlPipelines(BaseModel):
     extractors:     list[str]
