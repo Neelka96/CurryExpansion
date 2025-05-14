@@ -40,9 +40,7 @@ class Settings(BaseSettings):
     caas_mnt_conn:  SecretStr | None    = None  # ^^^ Same as above
 
     # Replacing Postgres save with CSV save for ease
-    clean_csv_stem: str                 = 'clean_inspection_data.csv'
     ml_log_stem:    str                 = 'grid_log.csv'
-    model_stem:     str                 = 'curry_inspector.h5'
 
     # PostgreSQL URI construction parts
     db_user_name:   str                 = 'postgres'

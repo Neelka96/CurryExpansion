@@ -8,12 +8,12 @@ from core import get_settings
 
 
 class SaveInspectionsCSV(BaseLoader):
-    def __init__(self):
+    def __init__(self, name: str):
         self.cfg = get_settings()
+        self.p = self.cfg.storage / f'{name}.csv'
 
     def load(self, df: pd.DataFrame) -> None:
-        p = self.cfg.storage / self.cfg.clean_csv_stem
-        df.to_csv(p, header = True, index = False)
+        df.to_csv(self.p, header = True, index = False)
         return None
 
 # EOF

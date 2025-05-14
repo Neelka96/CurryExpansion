@@ -30,6 +30,10 @@ transformers:
         violation_code: 100
         cuisine: 300
         nta: 750
+  blank:
+    class: ETL.transformers.passthrough.EmptyTransformer
+    params: {}
+
 
 loaders:
   to_postgres:
@@ -38,7 +42,8 @@ loaders:
       constraint_name: 'uq_inspection_natural'
   clean_to_csv:
     class: ETL.loaders.nyc_open_csv.SaveInspectionsCSV
-    params: {}
+    params:
+      name: clean_inspections
   save_model: 
     class: ETL.loaders.model.ModelLoader
     params:
@@ -50,6 +55,10 @@ loaders:
       tscv_n: 3
       final_cv_n: 4
       n_jobs: 7
+  make_predictions:
+    class: ETL.loaders.predictions.MakePredictions
+    params:
+      name: curry_inspector_20250514_v1
 
 
 # Putting pipelines together
@@ -59,7 +68,7 @@ pipelines:
     transformers: [ df_cleaner ]
     loaders: [ to_postgres ]
 
-  new_data_to_csv:
+  get_data_csv:
     extractors: [ nyc_open ]
     transformers: [ df_cleaner ]
     loaders: [ clean_to_csv ]
@@ -69,7 +78,14 @@ pipelines:
     transformers: [ new_ml_prep ]
     loaders: [ save_model ]
 
+  get_predictions:
+    extractors: [ quick_csv ]
+    transformers: [ passthrough ]
+    loaders: [ make_predictions ]
+
 # Grouping pipelines together
 tasks:
   fresh_train:
-    pipelines: [ new_data_to_csv, grid_tune_train ]
+    pipelines: [ get_data_csv, grid_tune_train, get_predictions ]
+  presentation:
+    pipelines: [ get_data_csv, get_predictions ]
