@@ -1,6 +1,7 @@
 # Import Dependencies
-from sqlalchemy import String, UniqueConstraint
+from sqlalchemy import BigInteger, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
+from decimal import Decimal as dec
 from datetime import date as D
 
 # Bring in Base class
@@ -17,28 +18,28 @@ class Inspection(Base):
             'inspection_date',
             'inspection_type',
             'inspection_subtype',
+            'violation_code',
             name = 'uq_inspection_natural'
         ),
     )
 
     # Columns
     id:                 Mapped[int] = mapped_column(primary_key = True, autoincrement = True)
-    camis:              Mapped[int] = mapped_column(nullable = False)
-    boro:               Mapped[str] = mapped_column(String(14), nullable = False)
+    camis:              Mapped[int] = mapped_column(BigInteger, nullable = False)
+    boro:               Mapped[str] = mapped_column(String(15), nullable = False)
     zipcode:            Mapped[int] = mapped_column(nullable = False)
-    cuisine:            Mapped[int] = mapped_column(String(100), nullable = False)
+    cuisine:            Mapped[int] = mapped_column(String(35), nullable = False)
     inspection_date:    Mapped[D]   = mapped_column(nullable = False)
-    inspection_type:    Mapped[str] = mapped_column(String(), nullable = False)
-    inspection_subtype: Mapped[str] = mapped_column(String(), nullable = False)
-    action:             Mapped[str] = mapped_column(String(), nullable = False)
-    violation_code:     Mapped[str] = mapped_column(String(), nullable = False)
-    critical_flag:      Mapped[str] = mapped_column(String(), nullable = False)
+    inspection_type:    Mapped[str] = mapped_column(String(30), nullable = False)
+    inspection_subtype: Mapped[str] = mapped_column(String(30), nullable = False)
+    violation_code:     Mapped[str] = mapped_column(String(7), nullable = False)
+    action:             Mapped[str] = mapped_column(String(30), nullable = False)
+    critical_flag:      Mapped[str] = mapped_column(String(17), nullable = False)
     score:              Mapped[int] = mapped_column(nullable = False)
     census_tract:       Mapped[int] = mapped_column(nullable = False)
-    nta:                Mapped[str] = mapped_column(String(), nullable = False)
-
-    def __repr__(self):
-        return f'<Inspection(id={self.id}, name="{self.score}")>'
+    nta:                Mapped[str] = mapped_column(String(7), nullable = False)
+    latitude:           Mapped[dec] = mapped_column(Numeric(7, 5), nullable = False)
+    longitude:          Mapped[dec] = mapped_column(Numeric(8, 5), nullable = False)
 
 
 

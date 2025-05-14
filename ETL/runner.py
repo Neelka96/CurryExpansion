@@ -1,7 +1,6 @@
 # Import dependencies
 from typing import overload, Literal
 from importlib import import_module
-import pandas as pd
 
 # Allow logging from top-level
 import logging
@@ -9,12 +8,12 @@ log = logging.getLogger(__name__)
 
 # Custom libraries
 from core import log_exceptions
-from .etl_bin import BaseExtractor, BaseTransformer, BaseLoader, Component_Block, Pipeline_Block, Task_Block, ETL_Config
+from ETL.etl_bin import BaseExtractor, BaseTransformer, BaseLoader, YamlComponents, YamlPipelines, YamlETL
 
 
-class Pipeline_Runner:
+class TaskRunner:
     '''
-    The Pipeline Runner is an abstraction of the ETL process meant to be orchestrated from the pipeline.yml file.  
+    The TaskRunner is an abstraction of the ETL process meant to be orchestrated from the pipeline.yml file.  
     The top-level parent file that creates an instantiation must load in environment variables first via `dotenv.load_dotenv()` to ensure they're expanded properly.
     After instantiation, execute method `.run(YOUR_PIPELINE_NAME_HERE)` to run a specific pipeline in the yaml.
 
@@ -22,10 +21,10 @@ class Pipeline_Runner:
     :type config_path: str
     
     :returns: Abstracted Pipeline containing the parsed yaml. Ready for specific pipeline execution.
-    :rtype: Pipeline_Runner
+    :rtype: TaskRunner
     '''
     def __init__(self, etl_cfg_path: str):
-        self.etl_cfg = ETL_Config.from_yaml(etl_cfg_path)
+        self.etl_cfg = YamlETL.from_yaml(etl_cfg_path)
     
     # Type checks implementation for each component type and its corresponding base ETL part
     @overload
@@ -48,10 +47,10 @@ class Pipeline_Runner:
         :rtype: BaseExtractor or BaseTransformer or BaseLoader
         '''
         # Gets the actual class specified by the YAML for pipeline and construct with paramaters
-        comp_cfg: Component_Block = getattr(self.etl_cfg, component_type)[name]
+        comp_cfg: YamlComponents = getattr(self.etl_cfg, component_type)[name]
         module_name, cls_name = comp_cfg.class_name.rsplit('.', 1)
         Impl = getattr(import_module(module_name), cls_name)
-        log.debug('Crafting import %s.%s.', (module_name, cls_name))
+        log.debug('Crafting import %s.%s.', module_name, cls_name)
         return Impl(**(comp_cfg.params or {}))
 
     # Execution for pipeline begins and ends here
@@ -70,18 +69,16 @@ class Pipeline_Runner:
         log.info('Pipeline %s started.', pipeline)
 
         # Get selected pipeline from YAML
-        pipe: Pipeline_Block = self.etl_cfg.pipelines[pipeline]
+        pipe: YamlPipelines = self.etl_cfg.pipelines[pipeline]
 
         # Extract all sources
         dfs = [self._make('extractors', key).extract() for key in pipe.extractors]
 
-        # Checks for concat requirement
-        # if pipe.concat: dfs = [pd.concat(dfs, ignore_index = True)]
-
         # Transform all extractions
-        for df in dfs:
+        for i, df in enumerate(dfs):
             for key in pipe.transformers:
                 df = self._make('transformers', key).transform(df)
+            dfs[i] = df
 
         # Load cleaned data
         for df in dfs:

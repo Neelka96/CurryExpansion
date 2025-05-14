@@ -1,8 +1,9 @@
 # Import dependencies
 from pydantic import BaseModel, Field
+from typing import Any
 import yaml, os, re
 
-ENV_REF = re.compile(r'\$\{env:([A-Z0-9_]+)\}')
+ENV_REF = re.compile(r'\$\{env:([A-Za-z0-9_]+)\}')
 
 def expand_env(obj) -> dict:
     '''Recursive expansion of python object for inserting environment variables.
@@ -25,28 +26,28 @@ def expand_env(obj) -> dict:
     return obj
 
 
-class Component_Block(BaseModel):
-    class_name:     str                     = Field(..., alias = 'class')
-    params:         dict[str, str | None]   = Field(default_factory = dict)
+class YamlComponents(BaseModel):
+    class_name:     str             = Field(..., alias = 'class')
+    params:         dict[str, Any]  = Field(default_factory = dict)
 
-class Pipeline_Block(BaseModel):
+class YamlPipelines(BaseModel):
     extractors:     list[str]
     transformers:   list[str]
     loaders:        list[str]
 
-class Task_Block(BaseModel):
+class YamlTasks(BaseModel):
     pipelines:      list[str]
 
-class ETL_Config(BaseModel):
-    extractors:     dict[str, Component_Block]
-    transformers:   dict[str, Component_Block]
-    loaders:        dict[str, Component_Block]
-    pipelines:      dict[str, Pipeline_Block]
-    tasks:          dict[str, Task_Block]
+class YamlETL(BaseModel):
+    extractors:     dict[str, YamlComponents]
+    transformers:   dict[str, YamlComponents]
+    loaders:        dict[str, YamlComponents]
+    pipelines:      dict[str, YamlPipelines]
+    tasks:          dict[str, YamlTasks]
 
 
     @classmethod
-    def from_yaml(cls, path: str) -> 'ETL_Config':
+    def from_yaml(cls, path: str) -> 'YamlETL':
         # Open main config YAML and expand ENV vars with actual vars
         raw_cfg = yaml.safe_load(open(path, 'r'))
         expanded_cfg = expand_env(raw_cfg)

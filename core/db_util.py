@@ -1,14 +1,12 @@
 # Import dependencies
-from math import ceil
 from contextlib import contextmanager
 from collections.abc import Sequence, Generator
 from sqlalchemy import Select, Row
 from sqlalchemy.sql import Executable
 from sqlalchemy.orm import sessionmaker, Session
-import pandas as pd
 
 # Custom libraries
-from .core_bin import auto_log_cls
+from core.core_bin import auto_log_cls
 
 # Create logger
 import logging
@@ -59,8 +57,8 @@ class Database:
 
         :returns: Returns view of data from `Select` type.
         :rtype: Sequence[Row]
-        :returns: Non-select executable type returns 0.
-        :rtype: int
+        :returns: Non-select executable type returns None on success.
+        :rtype: None
         '''
         with self.get_session() as session:
             result = session.execute(stmt, params) if params else session.execute(stmt)

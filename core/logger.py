@@ -3,7 +3,7 @@ import logging.config
 import logging
 
 # Custom libraries
-from .core_bin import Settings
+from core.core_bin import Settings
 
 
 def log_setup(cfg: Settings) -> None:

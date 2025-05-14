@@ -1,8 +1,13 @@
+# Import dependencies
 from typing import Literal, Any, TypeAlias
 from pathlib import Path
 
+# pydantic specific dependencies
 from pydantic import SecretStr, model_validator, field_validator, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Project helpers
+from core.core_bin.tools import find_root
 
 # Type aliases to make improve readability of Settings fields
 Envs:       TypeAlias   = Literal['development', 'production']
@@ -10,18 +15,17 @@ LogLevels:  TypeAlias   = Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL
 
 # Quick FYI for reading of configuration
 # Pydantic's BaseSettings validators works in the flow of: 
-# (mode = 'before') model -> field -> (mode = 'after') field -> model
+# Pre construct model, field -> Post construct field, model -> computed fields
 
 class Settings(BaseSettings):
     # Base options
-    model_config = SettingsConfigDict(env_file = None, case_sensitive = False)
+    model_config = SettingsConfigDict(env_file = '.env', case_sensitive = False, extra = 'ignore')
 
     # API keys removed from settings as they're included in expansion of the YAML
     # Basic App/Env Configurations
     app_env:        Envs                = 'development'
     debug:          bool                = True
-    root:           Path                = Path(__file__).resolve().parents[1]
-    templates_stem: Path                = Path('api/templates')
+    root:           Path                = find_root()
 
     # Log Configurations
     log_level:      LogLevels           = 'INFO'
@@ -29,16 +33,19 @@ class Settings(BaseSettings):
 
     # Drives available to store persistent data and the drive chosen by user or default for environment
     mnt_drive:      Path                = '/mnt/shared'
-    loc_drive_stem: Path                = Path('resources')
+    loc_drive_stem: Path                = root / 'resources'
 
     # CaaS secrets
     caas_conn:      SecretStr | None    = None  # Default of None -> (Prod) **REQUIRED | (Dev) None
     caas_mnt_conn:  SecretStr | None    = None  # ^^^ Same as above
 
-    # PostgreSQL URI construction parts - db_user_pass ALWAYS REQUIRED
-    db_user_name:   str                 = 'curryexp'
-    db_user_pass:   SecretStr
-    db_name:        str                 = 'curryinspection'
+    # Replacing Postgres save with CSV save for ease
+    ml_log_stem:    str                 = 'grid_log.csv'
+
+    # PostgreSQL URI construction parts
+    db_user_name:   str                 = 'postgres'
+    db_user_pass:   SecretStr           = 'postgres'
+    db_name:        str                 = 'postgres'
     db_host:        str                 = 'localhost'
     db_port:        int                 = 5432
 
@@ -77,14 +84,11 @@ class Settings(BaseSettings):
     # Fixes the path and creates directory if it doesn't exist
     def _mkdir_get_path(self, stem: Path) -> Path:
         p = self.root / stem
-        p.mkdir(parent = True, exist_ok = True)
+        p.mkdir(parents = True, exist_ok = True)
         return p
 
-    @computed_field
-    @property
-    def templates(self) -> Path:
-        return self._mkdir_get_path(self.templates_stem)
 
+    # 4) -- Computed field creation after full object construction --
     @computed_field
     @property
     def loc_drive(self) -> Path:
@@ -114,7 +118,6 @@ class Settings(BaseSettings):
     def engine_uri(self) -> str:
         eng = 'postgresql+psycopg2'
         return f'{eng}://{self.db_user_name}:{self.db_user_pass.get_secret_value()}@{self.db_host}:{self.db_port}/{self.db_name}'
-
 
 # EOF
 

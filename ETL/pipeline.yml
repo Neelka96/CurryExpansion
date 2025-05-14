@@ -2,52 +2,95 @@
 
 # Building blocks for ETL Classes
 extractors:
-  NYC_Open:
-    class: ETL.extractors.nyc_open.Restaurant_Inspection
+  nyc_open:
+    class: ETL.extractors.nyc_open.RawInspectionData
     params:
       domain: 'data.cityofnewyork.us'
       uri_id: '43nn-pn8j'
-      api_key: ${env:nyc_open_key}
-      years_cutoff: 2
-      row_limit: 200000
-  Census:
-    class:
+      nyc_open_key: ${env:nyc_open_key}
+      years_cutoff: 7
+      row_limit: 1000000
+  from_postgres:
+    class: ETL.extractors.sql_db.FromInspectionDB
+    params: {}
+  quick_csv:
+    class: ETL.extractors.clean_csv.CleanedInspectionCSV
     params:
-      url:
-      api_key: ${env:census_key}
-      sleep:
-      timeout:
+      name: clean_inspections
+
 
 transformers:
-  transformerName:
-    class:
+  df_cleaner:
+    class: ETL.transformers.nyc_open.InspectionCleaner
+    params: {}
+  new_ml_prep:
+    class: ETL.transformers.prep.PrepTransformer
     params:
-  nextTransformer:
-    class:
+      bins:
+        zipcode: 1000
+        census_tract: 650
+        violation_code: 100
+        cuisine: 300
+        nta: 750
+  passthrough:
+    class: ETL.transformers.passthrough.EmptyTransformer
     params: {}
 
+
 loaders:
-  postgres:
-    class:
+  to_postgres:
+    class: ETL.loaders.nyc_open.InspectionsLoader
     params:
-      dataset:
-      table:
+      constraint_name: 'uq_inspection_natural'
+  clean_to_csv:
+    class: ETL.loaders.nyc_open_csv.SaveInspectionsCSV
+    params:
+      name: clean_inspections
+  save_model: 
+    class: ETL.loaders.model.ModelLoader
+    params:
+      name: 'curry_inspector_20250514_v1'
+      numbers: [ last_score, rolling_mean_3 ]
+      cycles: [ dow_sin, dow_cos, month_sin, month_cos, quart_sin, quart_cos ]
+      categories: [ boro, zipcode, cuisine, inspection_type, inspection_subtype, violation_code, action, critical_flag, census_tract, nta, year, is_weekend ]
+      hard_date: 2025-02-17
+      tscv_n: 3
+      final_cv_n: 4
+      n_jobs: 7
+  make_predictions:
+    class: ETL.loaders.predictions.MakePredictions
+    params:
+      name: 'curry_inspector_20250514_v1'
+
 
 # Putting pipelines together
 pipelines:
-  startup:
-    extractors: [ NYC_Open, Census ]
-    transformers: [ transformerName, nextTransformer ]
-    loaders: [ postgres ]
+  get_data_pg:
+    extractors: [ nyc_open ]
+    transformers: [ df_cleaner ]
+    loaders: [ to_postgres ]
 
-  biweekly_update:
-    extractors: [ NYC_Open]
-    transformers: [ transformerName, nextTransformer ]
-    loaders: [ postgres ]
+  get_data_csv:
+    extractors: [ nyc_open ]
+    transformers: [ df_cleaner ]
+    loaders: [ clean_to_csv ]
+
+  grid_tune_train:
+    extractors: [ quick_csv ]
+    transformers: [ new_ml_prep ]
+    loaders: [ save_model ]
+
+  get_predictions:
+    extractors: [ quick_csv ]
+    transformers: [ new_ml_prep ]
+    loaders: [ make_predictions ]
+
 
 # Grouping pipelines together
 tasks:
-  name1:
-    pipelines: [ startup, biweekly_update ]
-  name2:
-    pipelines: [ startup ]
+  fresh_train:
+    pipelines: [ get_data_csv, grid_tune_train, get_predictions ]
+  fresh_predictions:
+    pipelines: [ get_data_csv, get_predictions ]
+  fresh_model:
+    pipelines: [ grid_tune_train, get_predictions ]
