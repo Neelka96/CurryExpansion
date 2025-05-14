@@ -13,34 +13,63 @@ extractors:
   from_postgres:
     class: ETL.extractors.sql_db.FromInspectionDB
     params: {}
+  quick_csv:
+    class: ETL.extractors.clean_csv.CleanedInspectionCSV
+    params: {}
 
 transformers:
   df_cleaner:
     class: ETL.transformers.nyc_open.InspectionCleaner
     params: {}
-  ml_preprocess:
-    class: ETL.transformers.sql_to_ml.MLPreprocess
-    params: {}
+  new_ml_prep:
+    class: ETL.transformers.prep.PrepTransformer
+    params:
+      bins:
+        zipcode: 1000
+        census_tract: 650
+        violation_code: 100
+        cuisine: 300
+        nta: 750
 
 loaders:
   to_postgres:
     class: ETL.loaders.nyc_open.InspectionsLoader
     params:
       constraint_name: 'uq_inspection_natural'
+  clean_to_csv:
+    class: ETL.loaders.nyc_open_csv.SaveInspectionsCSV
+    params: {}
+  save_model: 
+    class: ETL.loaders.model.ModelLoader
+    params:
+      name: curry_inspector_20250514_v1
+      numbers: [ last_score, rolling_mean_3 ]
+      cycles: [ dow_sin, dow_cos, month_sin, month_cos, quart_sin, quart_cos ]
+      categories: [ boro, zipcode, cuisine, inspection_type, inspection_subtype, violation_code, action, critical_flag, census_tract, nta, year, is_weekend ]
+      hard_date: 2025-02-17
+      tscv_n: 3
+      final_cv_n: 4
+      n_jobs: 7
+
 
 # Putting pipelines together
 pipelines:
-  get_data:
+  get_data_pg:
     extractors: [ nyc_open ]
     transformers: [ df_cleaner ]
     loaders: [ to_postgres ]
 
-  train_model:
-    extractors: [ from_postgres ]
-    transformers: [ ml_preprocess ]
-    loaders: [  ]
+  new_data_to_csv:
+    extractors: [ nyc_open ]
+    transformers: [ df_cleaner ]
+    loaders: [ clean_to_csv ]
+
+  grid_tune_train:
+    extractors: [ quick_csv ]
+    transformers: [ new_ml_prep ]
+    loaders: [ save_model ]
 
 # Grouping pipelines together
 tasks:
-  all:
-    pipelines: [ get_data, train_model ]
+  fresh_train:
+    pipelines: [ new_data_to_csv, grid_tune_train ]
