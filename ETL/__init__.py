@@ -1,7 +1,7 @@
-from .runner import Pipeline_Runner
+from .runner import TaskRunner
 
 __all__ = [
-    'Pipeline_Runner'
+    'TaskRunner'
 ]
 
 

@@ -51,7 +51,6 @@ def get_session_factory(**kwargs) -> sessionmaker[Session]:
     engine = get_engine(**kwargs)
     return sessionmaker(bind = engine, expire_on_commit = False)
 
-
 # EOF
 
 if __name__ == '__main__':

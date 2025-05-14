@@ -6,7 +6,7 @@ from pathlib import Path
 from pydantic import SecretStr, model_validator, field_validator, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Subpkg project helpers
+# Project helpers
 from core.core_bin.tools import find_root
 
 # Type aliases to make improve readability of Settings fields
@@ -39,10 +39,15 @@ class Settings(BaseSettings):
     caas_conn:      SecretStr | None    = None  # Default of None -> (Prod) **REQUIRED | (Dev) None
     caas_mnt_conn:  SecretStr | None    = None  # ^^^ Same as above
 
-    # PostgreSQL URI construction parts - db_user_pass ALWAYS REQUIRED
+    # Replacing Postgres save with CSV save for ease
+    clean_csv_stem: str                 = 'clean_inspection_data.csv'
+    ml_log_stem:    str                 = 'grid_log.csv'
+    model_stem:     str                 = 'curry_inspector.h5'
+
+    # PostgreSQL URI construction parts
     db_user_name:   str                 = 'postgres'
     db_user_pass:   SecretStr           = 'postgres'
-    db_name:        str
+    db_name:        str                 = 'postgres'
     db_host:        str                 = 'localhost'
     db_port:        int                 = 5432
 
@@ -115,7 +120,6 @@ class Settings(BaseSettings):
     def engine_uri(self) -> str:
         eng = 'postgresql+psycopg2'
         return f'{eng}://{self.db_user_name}:{self.db_user_pass.get_secret_value()}@{self.db_host}:{self.db_port}/{self.db_name}'
-
 
 # EOF
 

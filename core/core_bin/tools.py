@@ -1,11 +1,11 @@
 # Import dependencies
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 import pandas as pd
+
 
 def find_root(
         marker_files: list[str] = [
-            'setup.py',
             '.git', 
             '.gitignore', 
             '.env', 

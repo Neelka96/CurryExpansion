@@ -7,6 +7,8 @@ setup(
     packages = find_packages(),
     install_requires = [
         'ipykernel~=6.29.5',
+        'lightgbm~=4.6.0',
+        'matplotlib~=3.10.3',
         'mord~=0.7',
         'pandas~=2.2.3',
         'psycopg2~=2.9.10',

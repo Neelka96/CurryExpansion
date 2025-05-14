@@ -6,7 +6,7 @@ from datetime import datetime as dt, timezone as tz
 
 # Bring in settings to configure the path
 from core import get_settings
-from ml_lib.ml_bin import get_metrics, SklearnArray
+from ml_lib.scoring import get_metrics, SklearnArray
 
 _JSON_DUMPS = lambda data: json.dumps(data, separators = (',', ':'), default = str)
 

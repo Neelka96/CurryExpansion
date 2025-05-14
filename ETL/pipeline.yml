@@ -2,8 +2,8 @@
 
 # Building blocks for ETL Classes
 extractors:
-  NYC_Open:
-    class: ETL.extractors.nyc_open.Raw_NYC_Open
+  nyc_open:
+    class: ETL.extractors.nyc_open.RawInspectionData
     params:
       domain: 'data.cityofnewyork.us'
       uri_id: '43nn-pn8j'
@@ -11,28 +11,28 @@ extractors:
       years_cutoff: 7
       row_limit: 1000000
   from_postgres:
-    class: ETL.extractors.sql_db.Postgres_Features
+    class: ETL.extractors.sql_db.FromInspectionDB
     params: {}
 
 transformers:
-  main_cleaner:
-    class: ETL.transformers.nyc_open.NYC_Open_Cleaner
+  df_cleaner:
+    class: ETL.transformers.nyc_open.InspectionCleaner
     params: {}
   ml_preprocess:
-    class: ETL.transformers.sql_db.Preprocess_ML_Data
+    class: ETL.transformers.sql_to_ml.MLPreprocess
     params: {}
 
 loaders:
   to_postgres:
-    class: ETL.loaders.nyc_open.Load_Inspections
+    class: ETL.loaders.nyc_open.InspectionsLoader
     params:
       constraint_name: 'uq_inspection_natural'
 
 # Putting pipelines together
 pipelines:
   get_data:
-    extractors: [ NYC_Open ]
-    transformers: [ main_cleaner ]
+    extractors: [ nyc_open ]
+    transformers: [ df_cleaner ]
     loaders: [ to_postgres ]
 
   train_model:

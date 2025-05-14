@@ -1,9 +1,9 @@
 from .etl_abc import BaseExtractor, BaseTransformer, BaseLoader
-from .yaml_stubs import Component_Block, Pipeline_Block, Task_Block, ETL_Config
+from .yaml_stubs import YamlComponents, YamlPipelines, YamlTasks, YamlETL
 
 __all__ = [
     'BaseExtractor', 'BaseTransformer', 'BaseLoader',
-    'Component_Block', 'Pipeline_Block', 'Task_Block', 'ETL_Config',
+    'YamlComponents', 'YamlPipelines', 'YamlTasks', 'YamlETL',
 ]
 
 

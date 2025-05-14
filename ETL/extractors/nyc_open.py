@@ -6,7 +6,7 @@ import pandas as pd
 # Abstract class to de-couple extraction classes from Pipeline
 from ETL.etl_bin import BaseExtractor
 
-class Raw_NYC_Open(BaseExtractor):
+class RawInspectionData(BaseExtractor):
     def __init__(self, domain: str, uri_id: str, nyc_open_key: str, years_cutoff: int, row_limit: int):
         self.uri_id = uri_id
         self.client = Socrata(domain, nyc_open_key)

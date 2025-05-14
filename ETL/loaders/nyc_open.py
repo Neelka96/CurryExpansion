@@ -9,7 +9,7 @@ from core import Database, get_session_factory, get_settings
 from schemas import Inspection
 
 
-class Load_Inspections(BaseLoader):
+class InspectionsLoader(BaseLoader):
 
     def __init__(self, constraint_name: str):
         log.info('Load_Inspections constructed with constraint: %s.' % constraint_name)

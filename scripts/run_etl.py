@@ -9,7 +9,7 @@ import logging
 
 # Custom libraries
 from core import log_setup, get_settings, log_exceptions
-from ETL import Pipeline_Runner
+from ETL import TaskRunner
 
 
 # CLI class for namespace linking and linter assistance
@@ -49,10 +49,10 @@ def main() -> None:
     task_or_pipe_name = args.name
     
     # Logs for CLI arguments
-    log.debug('Initializing Pipeline_Runner with ETL config file: %s.' % etl_cfg_path)
+    log.debug('Initializing TaskRunner with ETL config file: %s.' % etl_cfg_path)
 
     # Instantiate the runner
-    runner = Pipeline_Runner(etl_cfg_path = str(etl_cfg_path))
+    runner = TaskRunner(etl_cfg_path = str(etl_cfg_path))
 
     # Another log for the kickoff
     log.debug('Kicking off pipeline, locating name/task: %s.' % task_or_pipe_name)

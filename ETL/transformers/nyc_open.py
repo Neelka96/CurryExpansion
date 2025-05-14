@@ -5,9 +5,9 @@ log = logging.getLogger(__name__)
 
 from ETL.etl_bin import BaseTransformer
 
-class NYC_Open_Cleaner(BaseTransformer):
+class InspectionCleaner(BaseTransformer):
     def __init__(self):
-        log.info('NYC_Open_Cleaner constructed successfully.')
+        log.info('InspectionCleaner constructed successfully.')
 
     def _map_actions(self):
         self.action_map = {

@@ -8,7 +8,7 @@ from core import Database, get_session_factory
 from schemas import Inspection
 
 
-class Postgres_Features(BaseExtractor):
+class FromInspectionDB(BaseExtractor):
     def __init__(self):
         self.db = Database(get_session_factory())
 
