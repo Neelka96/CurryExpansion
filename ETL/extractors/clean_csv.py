@@ -7,7 +7,8 @@ from core import get_settings
 
 
 class CleanedInspectionCSV(BaseExtractor):
-    def __init__(self):
+    def __init__(self, name: str):
+        self.name = name
         self.cfg = get_settings()
 
     def _convert_int(self, cols: list[str]):
@@ -22,7 +23,7 @@ class CleanedInspectionCSV(BaseExtractor):
         self.df[cols] = self.df[cols].apply(pd.to_datetime)
 
     def extract(self) -> pd.DataFrame:
-        p = self.cfg.storage / self.cfg.clean_csv_stem
+        p = self.cfg.storage / f'{self.name}.csv'
         self.df = pd.read_csv(p)
         
         self._convert_int(['camis', 'zipcode', 'score', 'census_tract'])

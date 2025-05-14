@@ -1,6 +1,7 @@
 # Import dependencies
 from sklearn.metrics import classification_report, mean_absolute_error, cohen_kappa_score
 from sklearn.model_selection import GridSearchCV, learning_curve
+from sklearn.ensemble import StackingClassifier
 from contextlib import redirect_stderr, contextmanager
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -89,7 +90,7 @@ def _parse_params(cell: str) -> dict:
 
 # Expand df takes in a dataframe and applies parse_params and expands the dataframe
 def expand_csv(file_name = 'grid_log.csv'):
-    df = pd.read_csv(cfg.root / file_name)
+    df = pd.read_csv(cfg.storage / file_name)
     df['params'] = df['params'].apply(_parse_params)
     params = pd.json_normalize(df['params'])
 
@@ -98,7 +99,7 @@ def expand_csv(file_name = 'grid_log.csv'):
 
 
 def read_write_grid(search_grid: GridSearchCV, file_name = 'grid_log.csv', overwrite = False):
-    path = cfg.root / file_name
+    path = cfg.storage / file_name
     df = grid_to_pd(search_grid)
     if not overwrite:
         if path.is_file():

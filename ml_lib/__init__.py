@@ -7,6 +7,7 @@ from .gridder import (
     read_write_grid, 
     learning_curve_plot
 )
+from .lgbm import LGBMOrdinal
 from .prepper import binning_cats, cycle_dates
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
     'expand_csv', 
     'read_write_grid', 
     'learning_curve_plot',
+    
+    'LGBMOrdinal',
     
     'binning_cats', 'cycle_dates',
 ]

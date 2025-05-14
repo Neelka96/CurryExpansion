@@ -11,26 +11,17 @@ from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.linear_model import RidgeClassifier
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from mord import LogisticIT, LogisticAT
-from lightgbm import LGBMRegressor
 
 # Other major externals
 from datetime import datetime, timezone, timedelta
 import pandas as pd
-import numpy as np
 import joblib
 import json
 
 # Bring in Custom Libraries
 from core import get_settings
 from ETL.etl_bin import BaseLoader
-from ml_lib import suppress_warnings, read_write_grid, full_est_scores
-
-# Define new class inherited from regressor
-# Sets LGBM to clip and threshold to ensure discrete integer comptability
-class LGBMOrdinal(LGBMRegressor):
-    def predict(self, X):
-        raw = super().predict(X)
-        return np.clip(np.round(raw), 0, 2).astype(int)
+from ml_lib import LGBMOrdinal, suppress_warnings, read_write_grid, full_est_scores
 
 # Loader to be called by pipeline runner
 class ModelLoader(BaseLoader):

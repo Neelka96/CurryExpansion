@@ -19,7 +19,7 @@ LogLevels:  TypeAlias   = Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL
 
 class Settings(BaseSettings):
     # Base options
-    model_config = SettingsConfigDict(env_file = '.env', case_sensitive = False)
+    model_config = SettingsConfigDict(env_file = '.env', case_sensitive = False, extra = 'ignore')
 
     # API keys removed from settings as they're included in expansion of the YAML
     # Basic App/Env Configurations

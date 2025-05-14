@@ -15,7 +15,9 @@ extractors:
     params: {}
   quick_csv:
     class: ETL.extractors.clean_csv.CleanedInspectionCSV
-    params: {}
+    params:
+      name: clean_inspections
+
 
 transformers:
   df_cleaner:
@@ -30,7 +32,7 @@ transformers:
         violation_code: 100
         cuisine: 300
         nta: 750
-  blank:
+  passthrough:
     class: ETL.transformers.passthrough.EmptyTransformer
     params: {}
 
@@ -47,7 +49,7 @@ loaders:
   save_model: 
     class: ETL.loaders.model.ModelLoader
     params:
-      name: curry_inspector_20250514_v1
+      name: 'curry_inspector_20250514_v1'
       numbers: [ last_score, rolling_mean_3 ]
       cycles: [ dow_sin, dow_cos, month_sin, month_cos, quart_sin, quart_cos ]
       categories: [ boro, zipcode, cuisine, inspection_type, inspection_subtype, violation_code, action, critical_flag, census_tract, nta, year, is_weekend ]
@@ -58,7 +60,7 @@ loaders:
   make_predictions:
     class: ETL.loaders.predictions.MakePredictions
     params:
-      name: curry_inspector_20250514_v1
+      name: 'curry_inspector_20250514_v1'
 
 
 # Putting pipelines together
@@ -82,6 +84,7 @@ pipelines:
     extractors: [ quick_csv ]
     transformers: [ passthrough ]
     loaders: [ make_predictions ]
+
 
 # Grouping pipelines together
 tasks:

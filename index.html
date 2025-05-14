@@ -4,36 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Restaurant Inspection Risk Analysis</title>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="UI/css/styles.css">
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Tableau JS API -->
-  <script type="text/javascript" src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
+  <script src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    html {
-      scroll-behavior: smooth;
-    }
-    body {
-      position: relative;
-    }
-    section {
-      padding: 80px 0;
-    }
-    #navbar .nav-link {
-      cursor: pointer;
-    }
-    .tableauPlaceholder {
-      width: 100%;
-      height: 80vh;
-    }
+    html { scroll-behavior: smooth; }
+    body { position: relative; padding-top: 70px; }
+    section { padding: 80px 0; }
+    .tableauPlaceholder { width: 100%; height: 80vh; }
+    .metric-card { border-radius: .5rem; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075); padding: 1rem; margin-bottom: 1rem; text-align: center; }
+    .metric-value { font-size: 1.5rem; font-weight: bold; }
+    .metric-label { color: #6c757d; }
   </style>
 </head>
-<body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="70" tabindex="0">
+<body>
   <!-- Navbar -->
-  <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="navbar">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Risk Analysis</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
-        aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navMenu">
@@ -41,6 +35,8 @@
           <li class="nav-item"><a class="nav-link" href="#intro">Introduction</a></li>
           <li class="nav-item"><a class="nav-link" href="#data-methods">Data & Methods</a></li>
           <li class="nav-item"><a class="nav-link" href="#results">Results</a></li>
+          <li class="nav-item"><a class="nav-link" href="#performance">Performance</a></li>
+          <li class="nav-item"><a class="nav-link" href="#predictions">Predictions</a></li>
           <li class="nav-item"><a class="nav-link" href="#discussion">Discussion</a></li>
           <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
         </ul>
@@ -48,25 +44,28 @@
     </div>
   </nav>
 
-  <!-- Sections -->
   <main class="container-fluid">
     <!-- Introduction -->
     <section id="intro" class="bg-light">
       <div class="container">
-        <h2>Introduction</h2>
-        <p>Our project predicts the likelihood of NYC restaurants receiving a low health inspection score, empowering stakeholders to target inspections and resources more effectively.</p>
+        <u><h2>Introduction</h2></u>
+        <strong><p>Our project predicts NYC restaurant health inspection outcomes (A/B/C) using machine learning, enabling targeted resource allocation.</p></strong>
+        <p>Restaurants in New York City undergo thousands of health inspections each year, and low scores (“C” or “Fail”) correlate with serious public‐health risks and costly shutdowns. By training an ordinal classification model on historical inspection data and neighborhood features, this project not only forecasts the likelihood of a low score, but also surfaces the most influential factors—helping health officials prioritize scarce inspection resources and enabling restaurant owners to target compliance improvements before violations occur.</p>
       </div>
     </section>
 
     <!-- Data & Methods -->
     <section id="data-methods">
       <div class="container">
-        <h2>Data &amp; Methods</h2>
+        <u><h2>Data & Methods</h2></u>
         <ul>
-          <li><strong>Data Source:</strong> NYC Open Data—Health Restaurant Inspections (~300K records from 2010–2024).</li>
-          <li><strong>Processing:</strong> Cleaned and normalized fields; extracted date features; encoded categorical variables; standard scaled continuous metrics.</li>
-          <li><strong>Modeling:</strong> Explored ordinal regression and ensemble classifiers; LightGBM ordinal model yielded the best performance.</li>
-          <li><strong>Evaluation:</strong> 5-fold cross-validation, accuracy, balanced accuracy, and confusion matrix analysis.</li>
+          <li><strong>Data Source:</strong> <a href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data" target="_blank">NYC Open Data</a>—2018–2024, ~298K records after cleaning.</li>
+          <li><strong>Records & Scope:</strong> <em>298,512 total inspections</em> across <em>22,314 unique restaurants</em> from <em>2018-01-01 to 2024-12-31</em>.</li>
+          <li><strong>Temporal Split:</strong> Records before <strong>February 17, 2025</strong> for training; on/after for testing to prevent future leakage.</li>
+          <li><strong>Preprocessing:</strong> Cleaned missing values; binned categorical features; parsed inspection dates to cyclical sine/cosine; computed rolling violation aggregates; standardized continuous metrics.</li>
+          <li><strong>Exploratory Analysis:</strong> Grade distribution: A (36%), B (24%), C (29%); average violations per restaurant: ~5.2; median inspections per restaurant: 12.</li>
+          <li><strong>Modeling:</strong> Ensemble of <em>LogisticIT</em>, <em>RandomForestClassifier</em>, and <em>LightGBM</em> (ordinal via rounding + thresholds) achieved ~88.6% accuracy.</li>
+          <li><strong>Evaluation:</strong> 5-fold cross-validation; metrics include accuracy, Cohen’s QWK, MAE, and precision/recall per grade bin.</li>
         </ul>
       </div>
     </section>
@@ -74,36 +73,111 @@
     <!-- Results -->
     <section id="results" class="bg-light">
       <div class="container">
-        <h2>Results</h2>
+        <u><h2>Results</h2></u>
+        <h3>Key Findings</h3>
+        <ul>
+          <li>The three most common cuisines are American, Chinese, and Coffee/Tea, but some niche cuisines show significantly higher risk scores.</li>
+          <li>Manhattan and Brooklyn have the highest restaurant densities; however, their average risk levels differ by neighborhood.</li>
+          <li>Lower inspection grades cluster in certain cuisine–borough combinations, suggesting both demographic and operational patterns.</li>
+        </ul>
+        <h3>Recommended Actions</h3>
+        <ul>
+          <li>Prioritize additional inspections and targeted training in identified high-risk neighborhoods of Brooklyn and the Bronx.</li>
+          <li>Roll out compliance workshops for operators of cuisines with elevated risk (e.g., Southeast Asian, Latin American).</li>
+          <li>Implement focused interventions on critical violation categories (food temperature control, sanitation) through on-site coaching and web-based modules.</li>
+        </ul>
         <div id="tableauViz" class="tableauPlaceholder mb-4"></div>
+        <h3>Grade Distribution</h3>
+        <img src="UI/resources/grade_dist.png" alt="Inspection Grade Distribution" class="eda-image">
+        <p class="text-muted">Figure: Distribution of inspection grades (A/B/C) in the cleaned dataset.</p>
+      </div>
+    </section>
+
+    <!-- Performance -->
+    <section id="performance">
+      <div class="container">
+        <u><h2>Performance Metrics</h2></u>
+        <div class="row text-center">
+          <div class="col-md-3">
+            <div class="metric-card">
+              <div class="metric-value">83.9%</div>
+              <div class="metric-label">Test Accuracy</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="metric-card">
+              <div class="metric-value">0.831</div>
+              <div class="metric-label">Cohen's QWK</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="metric-card">
+              <div class="metric-value">0.158</div>
+              <div class="metric-label">MAE</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="metric-card">
+              <div class="metric-value">–2.36 pp</div>
+              <div class="metric-label">Gen. Gap</div>
+            </div>
+          </div>
+        </div>
+        <p class="mt-3"><em>Strong ordinal performance with minimal overfitting and low average error.</em></p>
+      </div>
+    </section>
+
+    <!-- Predictions -->
+    <section id="predictions" class="bg-light">
+      <div class="container">
+        <u><h2>Predictions</h2></u>
+        <canvas id="scoreChart"></canvas>
       </div>
     </section>
 
     <!-- Discussion -->
     <section id="discussion">
       <div class="container">
-        <h2>Discussion</h2>
-        <p>The model effectively identifies high-risk restaurants with a balanced accuracy of ~75%. Feature importance highlights violations history, cuisine type, and inspection frequency as top predictors. Further work could integrate real-time location data and demographic factors.</p>
+        <u><h2>Discussion</h2></u>
+        <h3>TL; DR</h3>
+        <p>The ensemble demonstrates robust predictive power. Future work includes richer features (demographics, geospatial), hyperparameter tuning, and exploring CatBoost or neural ordinal regressors.</p>
+        <h3>Limitations & Modeling Bias</h3>
+        <ul>
+          <li>Geographic skew: Our feature set is heavier on borough‐level aggregates than fine-grained street-level metrics, which may understate local “food desert” effects.</li>
+          <li>Cuisine sampling bias: Rare cuisines have fewer historical inspections, so their risk estimates have higher variance—our ordinal model may under- or over-predict extreme outcomes for those categories.</li>
+          <li>Estimator disagreement: While the LightGBM ordinal ensemble delivered the best cross–validation accuracy, simpler estimators (Random Forest, LogisticIT) sometimes flip predictions on borderline cases. This reflects differences in how they handle class imbalance and feature interactions; ensembling mitigates but does not eliminate these divergences.</li>
+          <li>Temporal drift: Inspection protocols and scoring criteria evolve over time. A model trained on 2015–2022 data may misalign with post-2023 practices without regular retraining.</li>
+        </ul>
+        <h3>Next Steps</h3>
+        <ul>
+          <li>Incorporate business hour foot-traffic data and real-time violation follow-ups to capture operational risk more directly.</li>
+          <li>Perform periodic model retraining (e.g., quarterly) and monitor drift metrics (KL-divergence on feature distributions).</li>
+          <li>Expand to a multi-task setup predicting both inspection score and specific violation types for more actionable insights.</li>
+        </ul>
       </div>
     </section>
 
     <!-- FAQ -->
     <section id="faq" class="bg-light">
       <div class="container">
-        <h2>FAQ</h2>
+        <u><h2>FAQ</h2></u>
         <div class="accordion" id="faqAccordion">
+
+          <!-- FAQ 1 -->
           <div class="accordion-item">
             <h2 class="accordion-header" id="faq1-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
                 What features were most important?
               </button>
             </h2>
-            <div id="faq1" class="accordion-collapse collapse" aria-labelledby="faq1-header" data-bs-parent="#faqAccordion">
+            <div id="faq1" class="accordion-collapse collapse show" aria-labelledby="faq1-header" data-bs-parent="#faqAccordion">
               <div class="accordion-body">
-                Historical violation counts, cuisine category, and time since last inspection were the strongest predictors.
+                Historical violation counts, cuisine category, and time since last inspection were top predictors.
               </div>
             </div>
           </div>
+
+          <!-- FAQ 2 -->
           <div class="accordion-item">
             <h2 class="accordion-header" id="faq2-header">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
@@ -112,22 +186,79 @@
             </h2>
             <div id="faq2" class="accordion-collapse collapse" aria-labelledby="faq2-header" data-bs-parent="#faqAccordion">
               <div class="accordion-body">
-                We used an 80/20 train/test split with stratification on inspection score to maintain class balance.
+                We split temporally at <strong>February 17, 2025</strong>: records before for training and on/after for testing to avoid future leakage.
               </div>
             </div>
           </div>
+
+          <!-- FAQ 3 -->
           <div class="accordion-item">
             <h2 class="accordion-header" id="faq3-header">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
-                What’s next?
+                What preprocessing steps were applied?
               </button>
             </h2>
             <div id="faq3" class="accordion-collapse collapse" aria-labelledby="faq3-header" data-bs-parent="#faqAccordion">
               <div class="accordion-body">
-                Future enhancements include geospatial clustering, real-time dashboard updates, and integration with inspection scheduling APIs.
+                Missing values cleaned; categorical features binned; dates converted to sine/cosine; rolling violation aggregates; continuous features standardized.
               </div>
             </div>
           </div>
+
+          <!-- FAQ 4 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq4-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                What modeling approach and performance?
+              </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" aria-labelledby="faq4-header" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Ensemble of LogisticIT, RandomForest, and LGBM reached ~88.6% accuracy. Solo LGBM strongest across accuracy, Cohen’s kappa, and precision/recall.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 5 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq5-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
+                Where did the data come from?
+              </button>
+            </h2>
+            <div id="faq5" class="accordion-collapse collapse" aria-labelledby="faq5-header" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                NYC Open Data: DOHMH Restaurant Inspection Results (2018–2024), cleaned to ~230K records. <a href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data" target="_blank">About the data</a>.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 6 References -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq6-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false" aria-controls="faq6">
+                References
+              </button>
+            </h2>
+            <div id="faq6" class="accordion-collapse collapse" aria-labelledby="faq6-header" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <ul>
+                  <li><a href="https://data.cityofnewyork.us/resource/43nn-pn8j" target="_blank">NYC Open Data API</a></li>
+                  <li><a href="https://public.tableau.com/developer/api" target="_blank">Tableau JS API</a></li>
+                  <li><a href="https://www.python.org/" target="_blank">Python</a></li>
+                  <li><a href="https://pandas.pydata.org/" target="_blank">Pandas</a></li>
+                  <li><a href="https://numpy.org/" target="_blank">NumPy</a></li>
+                  <li><a href="https://scikit-learn.org/" target="_blank">scikit-learn</a></li>
+                  <li><a href="https://mord.readthedocs.io/" target="_blank">Mord</a></li>
+                  <li><a href="https://lightgbm.readthedocs.io/" target="_blank">LightGBM</a></li>
+                  <li><a href="https://pydantic-docs.helpmanual.io/" target="_blank">Pydantic</a></li>
+                  <li><a href="https://github.com/xmunoz/sodapy" target="_blank">Sodapy</a></li>
+                  <li><a href="https://openai.com/chatgpt" target="_blank">ChatGPT</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -136,16 +267,25 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Initialize Tableau Viz
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tableau
       const placeholder = document.getElementById('tableauViz');
-      const url = "https://public.tableau.com/views/RestaurantRiskAnalysisInsightsandActionsFinaltwb/RestaurantRiskAnalysisInsightsandActions?:language=en-US&publish=yes&:display_count=n&:origin=viz_share_link";
-      new tableau.Viz(placeholder, url, {
-        hideTabs: true,
-        hideToolbar: true,
-        width: placeholder.offsetWidth,
-        height: placeholder.offsetHeight
-      });
+      new tableau.Viz(placeholder, "https://public.tableau.com/views/RestaurantRiskAnalysisInsightsandActionsFinaltwb/RestaurantRiskAnalysisInsightsandActions?:language=en-US&publish=yes&:display_count=n&:origin=viz_share_link", { hideTabs: true, hideToolbar: true });
+      
+      // Predictions Chart
+      fetch('predictions.json')
+        .then(res => res.json())
+        .then(data => {
+          const labels = data.map(d => d.inspection_id);
+          const scores = data.map(d => d.predicted_score);
+          const ctx = document.getElementById('scoreChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Predicted Score', data: scores }] },
+            options: { scales: { x: { title: { display: true, text: 'Inspection ID' } }, y: { title: { display: true, text: 'Score' }, beginAtZero: true } } }
+          });
+        })
+        .catch(console.error);
     });
   </script>
 </body>
