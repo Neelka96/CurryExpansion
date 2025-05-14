@@ -1,6 +1,10 @@
 # Import dependencies
 
 # Scikit Helpers
+from sklearn import set_config
+set_config(transform = 'pandas')
+
+from sklearn.base import clone
 from sklearn.metrics import make_scorer, cohen_kappa_score
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -175,7 +179,7 @@ class ModelLoader(BaseLoader):
             )
             stack = Pipeline(
                 [
-                    ('prep', self.prep),
+                    ('prep', clone(self.prep)),
                     ('stack', _stack),
                 ],
                 memory = self.cache
